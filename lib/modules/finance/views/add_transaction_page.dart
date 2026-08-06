@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:youthx_app/modules/finance/model/transaction_model.dart';
+import 'package:youthx_app/modules/finance/models/transaction_model.dart';
 
 class AddTransactionPage extends StatefulWidget {
   const AddTransactionPage({super.key});
