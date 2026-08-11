@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>youthx_app</string>
+    <key>CFBundleDisplayName</key>
+    <string>YouthX</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.youthx.app</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UIMainStoryboardFile</key>
+    <string>Main</string>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+
+    <!-- Create Post / Story: pick images from the library -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>YouthX needs access to your photos to attach images to posts and stories.</string>
+
+    <!-- Story: capture a photo directly -->
+    <key>NSCameraUsageDescription</key>
+    <string>YouthX needs camera access to take photos for your story.</string>
+
+    <!-- Messenger: record voice messages -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>YouthX needs microphone access to record voice messages in chat.</string>
+
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
+</dict>
+</plist>
