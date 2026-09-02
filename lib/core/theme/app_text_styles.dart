@@ -20,6 +20,11 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
+  static TextStyle h4 = GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
 
   static TextStyle bodyLarge = GoogleFonts.inter(
     fontSize: 16,
@@ -36,12 +41,17 @@ class AppTextStyles {
     fontWeight: FontWeight.w400,
     color: AppColors.textSecondary,
   );
+  static TextStyle small = GoogleFonts.inter(
+    fontSize: 10,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+  );
+
   static TextStyle button = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w600,
     color: AppColors.surface,
   );
-
   static TextStyle eyebrow = GoogleFonts.inter(
     fontSize: 11,
     fontWeight: FontWeight.w700,

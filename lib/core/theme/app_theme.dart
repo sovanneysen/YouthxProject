@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
+import 'app_text_styles.dart';
 
 class AppTheme {
   AppTheme._();
@@ -25,6 +26,50 @@ class AppTheme {
             ? AppColors.violet
             : AppColors.border,
       ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.surface,
+      foregroundColor: AppColors.textPrimary,
+      elevation: 0,
+      centerTitle: false,
+      surfaceTintColor: Colors.transparent,
+    ),
+    cardColor: AppColors.surface,
+    dividerColor: AppColors.communityDivider,
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.inputFill,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      hintStyle: AppTextStyles.caption,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.violet,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        textStyle: AppTextStyles.button,
+      ),
+    ),
+    textTheme: TextTheme(
+      titleLarge: AppTextStyles.h1,
+      titleMedium: AppTextStyles.h3,
+      titleSmall: AppTextStyles.h4,
+      bodyMedium: AppTextStyles.bodyMedium,
+      bodySmall: AppTextStyles.caption,
+      labelSmall: AppTextStyles.small,
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: AppColors.surface,
+      selectedItemColor: AppColors.violet,
+      unselectedItemColor: AppColors.communityTextMuted,
+      showUnselectedLabels: true,
+      type: BottomNavigationBarType.fixed,
     ),
   );
 
@@ -52,8 +97,6 @@ class AppTheme {
   );
 }
 
-/// Small helper so widgets can read theme-aware colors without
-/// sprinkling `Theme.of(context).brightness == Brightness.dark` everywhere.
 extension AppThemeColors on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
   Color get bg => isDark ? AppColors.backgroundDark : AppColors.background;
