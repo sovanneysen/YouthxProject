@@ -20,6 +20,19 @@ class AppColors {
   static const Color border = Color(0xFFE9EAF3);
   static const Color inputFill = Color(0xFFF2F3F9);
 
+  // Backward-compatible aliases for older app code that references the generic
+  // names used before the palette was split into core/community variants.
+  static const Color primary = communityPrimary;
+  static const Color accentPurple = communityAccentPurple;
+  static const Color accentGreen = communityAccentGreen;
+  static const Color accentOrange = communityAccentOrange;
+  static const Color accentRed = communityAccentRed;
+  static const Color danger = communityDanger;
+  static const Color divider = communityDivider;
+  static const Color textMuted = communityTextMuted;
+  static const Color textOnPrimary = communityTextOnPrimary;
+  static const Color surfaceAlt = communitySurfaceAlt;
+
   static const Color backgroundDark = Color(0xFF0B0D17);
   static const Color surfaceDark = Color(0xFF161927);
   static const Color surfaceDarkAlt = Color(0xFF1E2233);

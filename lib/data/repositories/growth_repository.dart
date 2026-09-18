@@ -10,8 +10,6 @@ class GrowthRepository {
     : _provider = provider ?? GrowthProvider();
 
   Future<List<GoalModel>> fetchGoals() => _provider.getGoals();
-
   Future<List<HabitModel>> fetchHabits() => _provider.getHabits();
-
   Future<List<TodoModel>> fetchTodos() => _provider.getTodos();
 }

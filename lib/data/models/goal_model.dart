@@ -70,6 +70,29 @@ class GoalModel {
     return null ?? '';
   }
 
+  factory GoalModel.fromJson(Map<String, dynamic> json) {
+    final rawCategory = (json['category'] ?? 'other').toString();
+
+    return GoalModel(
+      id: json['id']?.toString() ?? '',
+      emoji: json['emoji'] ?? '🎯',
+      title: json['title'] ?? '',
+      category: GoalCategory.values.firstWhere(
+        (category) => category.name == rawCategory,
+        orElse: () => GoalCategory.other,
+      ),
+      customCategoryLabel: json['customCategoryLabel'] as String?,
+      targetDate: (json['targetDate'] ?? DateTime.now().toIso8601String())
+          .toString(),
+      progress: (json['progress'] as num?)?.toDouble() ?? 0.0,
+      hasReminder: json['hasReminder'] ?? false,
+      reminderTime: json['reminderTime'] as String?,
+      targetAmount: (json['targetAmount'] as num?)?.toDouble(),
+      currentAmount: (json['currentAmount'] as num?)?.toDouble(),
+      unit: json['unit'] as String?,
+    );
+  }
+
   GoalModel copyWith({
     String? emoji,
     String? title,
