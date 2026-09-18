@@ -9,6 +9,7 @@ import 'auth/views/splash_screen.dart';
 import 'auth/views/verify_screen.dart';
 import 'core/network/socket_service.dart';
 import 'core/theme/app_theme.dart';
+import 'modules/profile/views/profile_screen.dart';
 import 'routes/app_pages.dart';
 
 void main() {
@@ -36,6 +37,7 @@ class YouthXApp extends StatelessWidget {
         '/verify': (_) => const VerifyEmailScreen(),
         '/home': (_) => const HomeScreen(),
         '/notifications': (_) => const NotificationsScreen(),
+        '/profile': (_) => const ProfileScreen(),
       },
     );
   }
