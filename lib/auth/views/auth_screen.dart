@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import '../../data/providers/api_provider.dart';
+import '../../routes/app_routes.dart';
+import '../controllers/auth_controller.dart';
 
 // ==================================================================
 // 3. AUTH SCREEN (Sign Up / Sign In toggle)
@@ -15,6 +19,8 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool isSignUp = true; // true = Sign Up tab, false = Sign In tab
 
+  final AuthController _auth = Get.find<AuthController>();
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -28,9 +34,57 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  void submit() {
-    // In a real app: call your API here. For now, go straight to verification.
-    Navigator.pushNamed(context, '/verify');
+  Future<void> submit() async {
+    if (_auth.isLoading.value) return;
+
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final fullName = nameController.text.trim();
+
+    if (!_validate(email, password)) return;
+
+    FocusScope.of(context).unfocus();
+    try {
+      if (isSignUp) {
+        await _auth.register(
+          email: email,
+          password: password,
+          fullName: fullName,
+        );
+      } else {
+        await _auth.login(email: email, password: password);
+      }
+      if (!mounted) return;
+      Get.offAllNamed(AppRoutes.home);
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('Something went wrong. Please try again.');
+    }
+  }
+
+  bool _validate(String email, String password) {
+    if (isSignUp && nameController.text.trim().isEmpty) {
+      _showError('Please enter your full name.');
+      return false;
+    }
+    if (email.isEmpty ||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      _showError('Please enter a valid email address.');
+      return false;
+    }
+    if (password.isEmpty) {
+      _showError('Please enter your password.');
+      return false;
+    }
+    return true;
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -53,18 +107,24 @@ class _AuthScreenState extends State<AuthScreen> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Center(
-                    child: Text('X',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'X',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 8),
               const Center(
-                  child: Text('YouthX',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
+                child: Text(
+                  'YouthX',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
               const SizedBox(height: 24),
 
               // Segmented tab control (Sign Up / Sign In)
@@ -97,7 +157,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
               Text(
                 isSignUp ? 'Create your account' : 'Welcome back!',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -110,7 +173,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
               // Full name — only on Sign Up
               if (isSignUp) ...[
-                const Text('Full Name', style: TextStyle(fontWeight: FontWeight.w600)),
+                const Text(
+                  'Full Name',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: nameController,
@@ -122,7 +188,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 16),
               ],
 
-              const Text('Email Address', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text(
+                'Email Address',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 6),
               TextField(
                 controller: emailController,
@@ -134,7 +203,10 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 16),
 
-              const Text('Password', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text(
+                'Password',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 6),
               TextField(
                 controller: passwordController,
@@ -143,9 +215,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   hintText: isSignUp ? 'Create a password' : 'Your password',
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
-                    icon: Icon(obscurePassword
-                        ? Icons.visibility_off
-                        : Icons.visibility),
+                    icon: Icon(
+                      obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    ),
                     onPressed: () {
                       setState(() => obscurePassword = !obscurePassword);
                     },
@@ -170,12 +242,29 @@ class _AuthScreenState extends State<AuthScreen> {
                   backgroundColor: const Color(0xFF4A6CF7),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                onPressed: submit,
-                child: Text(isSignUp ? 'Create Account →' : 'Sign In →',
+                onPressed: _auth.isLoading.value ? null : submit,
+                child: Obx(() {
+                  if (_auth.isLoading.value) {
+                    return const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    );
+                  }
+                  return Text(
+                    isSignUp ? 'Create Account →' : 'Sign In →',
                     style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                }),
               ),
               const SizedBox(height: 16),
 
@@ -184,7 +273,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   // This is where you'd trigger Google Sign-In —
                   // that account picker screen is OS-provided, not built by you.
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Would open Google Sign-In here')),
+                    const SnackBar(
+                      content: Text('Would open Google Sign-In here'),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.g_mobiledata, size: 28),
@@ -192,7 +283,8 @@ class _AuthScreenState extends State<AuthScreen> {
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -226,7 +318,12 @@ class _TabButton extends StatelessWidget {
           color: selected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           boxShadow: selected
-              ? [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4)]
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 4,
+                  ),
+                ]
               : [],
         ),
         child: Text(

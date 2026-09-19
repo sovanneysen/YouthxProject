@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:youthx_app/modules/finance/views/add_transaction_page.dart';
-import 'package:youthx_app/modules/finance/views/all_transactions_page.dart';
+import 'package:youthx/modules/finance/views/add_transaction_page.dart';
+import 'package:youthx/modules/finance/views/all_transactions_page.dart';
 
 class FinanceHomePage extends StatelessWidget {
   const FinanceHomePage({super.key});

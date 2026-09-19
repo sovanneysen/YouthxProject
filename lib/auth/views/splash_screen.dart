@@ -1,9 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../routes/app_routes.dart';
+import '../controllers/auth_controller.dart';
+
 // ==================================================================
 // 1. SPLASH SCREEN
 // ==================================================================
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _restoreSession();
+  }
+
+  Future<void> _restoreSession() async {
+    final auth = Get.find<AuthController>();
+    await auth.restoreSession();
+    if (!mounted) return;
+    if (auth.isAuthenticated) Get.offAllNamed(AppRoutes.home);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,27 +56,36 @@ class SplashScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Center(
-                    child: Text('X',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'X',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                const Text('YouthX',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5)),
+                const Text(
+                  'YouthX',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('UNITE · EMPOWER · GROW',
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
-                        letterSpacing: 2)),
+                Text(
+                  'UNITE · EMPOWER · GROW',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 12,
+                    letterSpacing: 2,
+                  ),
+                ),
                 const SizedBox(height: 32),
 
                 // 2x2 pill tags
@@ -80,13 +112,16 @@ class SplashScreen extends StatelessWidget {
                       foregroundColor: const Color(0xFF4A6CF7),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/onboarding');
+                      Get.offNamed(AppRoutes.onboarding);
                     },
-                    child: const Text('Get Started →',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Get Started →',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -94,10 +129,12 @@ class SplashScreen extends StatelessWidget {
                 // Sign in link
                 TextButton(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/auth');
+                    Get.offNamed(AppRoutes.auth);
                   },
-                  child: Text('Already have an account? Sign In',
-                      style: TextStyle(color: Colors.white.withOpacity(0.85))),
+                  child: Text(
+                    'Already have an account? Sign In',
+                    style: TextStyle(color: Colors.white.withOpacity(0.85)),
+                  ),
                 ),
                 const SizedBox(height: 20),
               ],
@@ -127,7 +164,10 @@ class _SplashTag extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: Colors.white),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
         ],
       ),
     );

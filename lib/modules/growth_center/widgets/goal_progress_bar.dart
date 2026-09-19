@@ -22,7 +22,7 @@ class GoalProgressBar extends StatelessWidget {
               backgroundColor: const Color(0xFFE5E7EB),
               valueColor: AlwaysStoppedAnimation<Color>(color),
               semanticsLabel: 'Goal progress',
-              semanticsValue: '${(progress * 100).round()} percent',
+              semanticsValue: '${(progress.clamp(0.0, 1.0) * 100).round()}',
             ),
           ),
         ),

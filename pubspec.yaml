@@ -16,6 +16,8 @@ dependencies:
   # Networking / realtime
   web_socket_channel: ^3.0.3
   http: ^1.2.1
+  # Secure storage (JWT)
+  flutter_secure_storage: ^9.2.4
   # Media
   image_picker: ^1.1.2
   record: ^7.1.1

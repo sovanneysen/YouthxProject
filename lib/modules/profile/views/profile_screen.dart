@@ -1,5 +1,8 @@
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../../auth/controllers/auth_controller.dart';
+import '../../../routes/app_routes.dart';
 import '../profile_model.dart';
 import 'followers_screen.dart';
 import 'following_screen.dart';
@@ -23,7 +26,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
  
   bool _darkMode = false;
   bool _menuOpen = false;
-  int _navIndex = 4;
   PostTab _selectedTab = PostTab.myPosts;
  
   // TODO: replace with data fetched from your backend / database.
@@ -178,7 +180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-                _buildBottomNav(),
               ],
             ),
             // Dim/close menu when tapping outside the panel
@@ -363,9 +364,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              // TODO: clear session/token and navigate to your login screen.
+              await Get.find<AuthController>().logout();
+              Get.offAllNamed(AppRoutes.auth);
             },
             child: const Text('Log out', style: TextStyle(color: Colors.redAccent)),
           ),
@@ -670,8 +672,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
  
-  // ---------------- SHARED HELPERS ----------------
- 
+// ---------------- SHARED HELPERS ----------------
+
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
       color: Colors.white,
@@ -685,54 +687,5 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
- 
-  Widget _buildBottomNav() {
-    final items = [
-      _NavItem(Icons.home, 'Home'),
-      _NavItem(Icons.groups, 'Community'),
-      _NavItem(Icons.track_changes, 'Growth'),
-      _NavItem(Icons.credit_card, 'Finance'),
-      _NavItem(Icons.person, 'Profile'),
-    ];
- 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(items.length, (i) {
-          final selected = i == _navIndex;
-          final color = selected ? primaryPurple : Colors.grey.shade500;
-          return GestureDetector(
-            onTap: () => setState(() => _navIndex = i),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(items[i].icon, color: color, size: 22),
-                const SizedBox(height: 4),
-                Text(
-                  items[i].label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: color,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
- 
-class _NavItem {
-  final IconData icon;
-  final String label;
-  _NavItem(this.icon, this.label);
 }
  

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../routes/app_routes.dart';
 
 // ==================================================================
 // 2. ONBOARDING SCREEN (3 pages in a PageView)
@@ -63,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ];
 
   void goToAuth() {
-    Navigator.pushReplacementNamed(context, '/auth');
+    Get.offNamed(AppRoutes.auth);
   }
 
   @override
@@ -115,18 +118,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             color: p.accent,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(p.centerIcon, color: Colors.white, size: 48),
+                          child: Icon(
+                            p.centerIcon,
+                            color: Colors.white,
+                            size: 48,
+                          ),
                         ),
                         const SizedBox(height: 40),
-                        Text(p.title,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                fontSize: 22, fontWeight: FontWeight.bold)),
+                        Text(
+                          p.title,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 12),
-                        Text(p.description,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 14, color: Colors.grey.shade700)),
+                        Text(
+                          p.description,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -163,7 +178,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     backgroundColor: page.accent,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: () {
                     final isLastPage = currentPage == pages.length - 1;
@@ -176,9 +192,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       );
                     }
                   },
-                  child: Text(page.buttonText,
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    page.buttonText,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
