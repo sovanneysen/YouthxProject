@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../auth/controllers/auth_controller.dart';
 import '../../../routes/app_routes.dart';
 import '../profile_model.dart';
@@ -27,6 +28,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _darkMode = false;
   bool _menuOpen = false;
   PostTab _selectedTab = PostTab.myPosts;
+
+  final AuthController _auth = Get.find<AuthController>();
+
+  String _initials(String? fullName) {
+    if (fullName == null || fullName.trim().isEmpty) return '…';
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return '…';
+    final first = parts.first.isNotEmpty ? parts.first[0] : '';
+    final last = parts.length > 1 && parts.last.isNotEmpty ? parts.last[0] : '';
+    return (first + last).toUpperCase();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDarkMode();
+  }
+
+  Future<void> _loadDarkMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      setState(() => _darkMode = prefs.getBool('darkMode') ?? false);
+    } catch (_) {
+      // Preferences unavailable; fall back to the in-memory default.
+    }
+  }
+
+  Future<void> _setDarkMode(bool value) async {
+    setState(() => _darkMode = value);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('darkMode', value);
+    } catch (_) {
+      // Non-critical preference; keep the in-memory value.
+    }
+  }
  
   // TODO: replace with data fetched from your backend / database.
   final List<Post> _myPosts = [
@@ -151,19 +189,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               _buildAvatar(),
                               const SizedBox(height: 14),
-                              const Text(
-                                'Alex Johnson',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1F2333),
+                              Obx(
+                                () => Text(
+                                  _auth.currentUser.value?.fullName ?? '…',
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1F2333),
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text(
-                                'University Student · Computer Science',
-                                style: TextStyle(
-                                    fontSize: 14, color: Colors.grey.shade600),
+                              Obx(
+                                () => Text(
+                                  _auth.currentUser.value?.email ?? '',
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey.shade600),
+                                ),
                               ),
                               const SizedBox(height: 20),
                               _buildStatsCard(),
@@ -290,7 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return InkWell(
       onTap: () {
         if (item.isToggle) {
-          setState(() => _darkMode = !_darkMode);
+          _setDarkMode(!_darkMode);
           return;
         }
         setState(() => _menuOpen = false);
@@ -343,7 +385,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Switch(
                   value: _darkMode,
                   activeColor: primaryPurple,
-                  onChanged: (val) => setState(() => _darkMode = val),
+                  onChanged: (val) => _setDarkMode(val),
                 ),
               ),
           ],
@@ -403,10 +445,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             colors: [gradientBlue, primaryPurple],
           ),
         ),
-        child: const Center(
-          child: Text(
-            'AJ',
-            style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+        child: Center(
+          child: Obx(
+            () => Text(
+              _initials(_auth.currentUser.value?.fullName),
+              style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ),

@@ -1,93 +1,33 @@
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-
-import '../../core/network/app_config.dart';
+import '../../core/network/api_client.dart';
 import '../../core/network/token_store.dart';
 
-/// Error thrown for non-2xx HTTP responses. [message] mirrors the backend
-/// `ErrorResponse.message` when available so the UI can show the real cause
-/// (e.g. "Email is already registered" or "Invalid credentials").
-class ApiException implements Exception {
-  final int status;
-  final String message;
+export '../../core/network/api_client.dart' show ApiException;
 
-  const ApiException(this.status, this.message);
-
-  @override
-  String toString() => 'ApiException($status): $message';
-}
-
-/// Thin REST wrapper. Repositories call through this instead of `http`
-/// directly so swapping base URL / adding auth headers happens in one place.
+/// Thin REST facade that repositories call through.
+///
+/// Internally delegates to the Dio-based [ApiClient] so base URL, bearer auth,
+/// timeouts and error handling all live in one place. This class keeps its
+/// historical constructor and method signatures so existing repositories and
+/// dependency injection keep working unchanged.
 class ApiProvider {
   ApiProvider({TokenStore? tokenStore})
-    : _tokenStore = tokenStore ?? MemoryTokenStore();
+    : _client = ApiClient(tokenStore: tokenStore ?? MemoryTokenStore());
 
-  final http.Client _client = http.Client();
-  final TokenStore _tokenStore;
+  final ApiClient _client;
 
-  Uri _uri(String path) => Uri.parse('${AppConfig.apiBaseUrl}$path');
+  Future<dynamic> get(String path) => _client.get(path);
 
-  Future<Map<String, String>> _headers() async {
-    final token = await _tokenStore.read();
-    return {
-      'Content-Type': 'application/json',
-      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
-    };
-  }
+  Future<dynamic> post(String path, Map<String, dynamic> body) =>
+      _client.post(path, body);
 
-  Future<dynamic> get(String path) async {
-    final headers = await _headers();
-    final res = await _client.get(_uri(path), headers: headers);
-    return _decode(res);
-  }
+  Future<dynamic> put(String path, Map<String, dynamic> body) =>
+      _client.put(path, body);
 
-  Future<dynamic> post(String path, Map<String, dynamic> body) async {
-    final headers = await _headers();
-    final res = await _client.post(
-      _uri(path),
-      headers: headers,
-      body: jsonEncode(body),
-    );
-    return _decode(res);
-  }
+  Future<dynamic> delete(String path) => _client.delete(path);
 
-  Future<dynamic> put(String path, Map<String, dynamic> body) async {
-    final headers = await _headers();
-    final res = await _client.put(
-      _uri(path),
-      headers: headers,
-      body: jsonEncode(body),
-    );
-    return _decode(res);
-  }
-
-  Future<dynamic> delete(String path) async {
-    final headers = await _headers();
-    final res = await _client.delete(_uri(path), headers: headers);
-    return _decode(res);
-  }
-
-  dynamic _decode(http.Response res) {
-    if (res.statusCode >= 200 && res.statusCode < 300) {
-      if (res.body.isEmpty) return null;
-      return jsonDecode(res.body);
-    }
-    throw _error(res);
-  }
-
-  ApiException _error(http.Response res) {
-    String message = 'API error ${res.statusCode}';
-    try {
-      final decoded = jsonDecode(res.body);
-      if (decoded is Map<String, dynamic> && decoded['message'] is String) {
-        message = decoded['message'] as String;
-      }
-    } catch (_) {
-      // keep the generic fallback when the body isn't a JSON ErrorResponse
-    }
-    return ApiException(res.statusCode, message);
-  }
+  Future<dynamic> postMultipartFile(
+    String path,
+    String filePath, {
+    String fileField = 'file',
+  }) => _client.postMultipartFile(path, filePath, fileField: fileField);
 }

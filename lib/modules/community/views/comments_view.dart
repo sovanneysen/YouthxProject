@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../auth/controllers/auth_controller.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/network/app_config.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/models/user_model.dart';
@@ -38,9 +38,38 @@ class _CommentsViewState extends State<CommentsView> {
     super.dispose();
   }
 
+  UserModel _me() {
+    final user = Get.find<AuthController>().currentUser.value;
+    return UserModel(
+      id: user?.id ?? '',
+      name: (user != null && user.fullName.isNotEmpty) ? user.fullName : 'You',
+    );
+  }
+
+  void _confirmDelete(CommentsController controller, String commentId) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete comment?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              controller.deleteComment(commentId);
+              Get.back();
+            },
+            child: const Text('Delete', style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final me = UserModel(id: AppConfig.currentUserId, name: 'You');
+    final me = _me();
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SizedBox(
@@ -127,6 +156,21 @@ class _CommentsViewState extends State<CommentsView> {
     if (c.loading.value) {
       return const Center(child: CircularProgressIndicator());
     }
+    final loadError = c.error.value;
+    if (loadError != null && c.comments.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(loadError,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary)),
+            const SizedBox(height: 10),
+            OutlinedButton(onPressed: c.load, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
     if (c.comments.isEmpty) {
       return const Center(
         child: Text('Be the first to comment', style: TextStyle(color: AppColors.textSecondary)),
@@ -134,12 +178,17 @@ class _CommentsViewState extends State<CommentsView> {
     }
     final items = <Widget>[];
     for (final comment in c.topLevelComments) {
-      items.add(CommentTile(comment: comment, onReply: () => c.startReply(comment)));
+      items.add(CommentTile(
+        comment: comment,
+        onReply: () => c.startReply(comment),
+        onDelete: _canDelete(comment) ? () => _confirmDelete(c, comment.id) : null,
+      ));
       for (final reply in c.repliesTo(comment.id)) {
         items.add(CommentTile(
           comment: reply,
           isReply: true,
           onReply: () => c.startReply(reply),
+          onDelete: _canDelete(reply) ? () => _confirmDelete(c, reply.id) : null,
         ));
       }
     }
@@ -148,5 +197,10 @@ class _CommentsViewState extends State<CommentsView> {
       itemCount: items.length,
       itemBuilder: (_, i) => items[i],
     );
+  }
+
+  bool _canDelete(CommentModel comment) {
+    final currentUserId = c.currentUserId;
+    return currentUserId.isNotEmpty && comment.author.id == currentUserId;
   }
 }

@@ -16,8 +16,15 @@ dependencies:
   # Networking / realtime
   web_socket_channel: ^3.0.3
   http: ^1.2.1
-  # Secure storage (JWT)
+  dio: ^5.7.0
+  # Secure storage (JWT) / local prefs
   flutter_secure_storage: ^9.2.4
+  shared_preferences: ^2.5.3
+  # Client-side crypto (approved stack)
+  crypto: ^3.0.6
+  encrypt: ^5.0.3
+  # Remote images
+  cached_network_image: ^3.4.1
   # Media
   image_picker: ^1.1.2
   record: ^7.1.1

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../routes/app_routes.dart';
+import '../controllers/auth_controller.dart';
 
 // ==================================================================
 // 5. HOME SCREEN (scrollable dashboard + bottom nav)
@@ -14,6 +15,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final AuthController _auth = Get.find<AuthController>();
+
+  String _initials(String? fullName) {
+    if (fullName == null || fullName.trim().isEmpty) return '…';
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return '…';
+    final first = parts.first.isNotEmpty ? parts.first[0] : '';
+    final last = parts.length > 1 && parts.last.isNotEmpty ? parts.last[0] : '';
+    return (first + last).toUpperCase();
+  }
+
   // Habit checklist lives here so checkboxes can update it with setState.
   final List<_Habit> habits = [
     _Habit(
@@ -66,26 +78,33 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Row(
           children: [
-            const CircleAvatar(
-              backgroundColor: Color(0xFF4A6CF7),
-              child: Text(
-                'AJ',
-                style: TextStyle(color: Colors.white, fontSize: 12),
+            Obx(
+              () => CircleAvatar(
+                backgroundColor: const Color(0xFF4A6CF7),
+                child: Text(
+                  _initials(_auth.currentUser.value?.fullName),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
               ),
             ),
             const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Good morning 👋',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                Text(
-                  'Alex Johnson',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
+            Obx(
+              () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Good morning 👋',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  Text(
+                    _auth.currentUser.value?.fullName ?? '…',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

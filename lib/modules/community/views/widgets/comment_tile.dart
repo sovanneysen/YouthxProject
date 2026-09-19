@@ -10,6 +10,7 @@ class CommentTile extends StatelessWidget {
   final bool isReply;
   final VoidCallback? onAvatarTap;
   final VoidCallback? onReply;
+  final VoidCallback? onDelete;
 
   const CommentTile({
     super.key,
@@ -17,6 +18,7 @@ class CommentTile extends StatelessWidget {
     this.isReply = false,
     this.onAvatarTap,
     this.onReply,
+    this.onDelete,
   });
 
   @override
@@ -60,6 +62,14 @@ class CommentTile extends StatelessWidget {
                             'Reply',
                             style: AppTextStyles.small.copyWith(fontWeight: FontWeight.w700, color: AppColors.textSecondary),
                           ),
+                        ),
+                      ],
+                      if (onDelete != null) ...[
+                        const SizedBox(width: 14),
+                        InkWell(
+                          onTap: onDelete,
+                          child: const Icon(Icons.delete_outline,
+                              size: 14, color: AppColors.textMuted),
                         ),
                       ],
                     ],

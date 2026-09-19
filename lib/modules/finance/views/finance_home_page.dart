@@ -1,12 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:youthx/modules/finance/views/add_transaction_page.dart';
-import 'package:youthx/modules/finance/views/all_transactions_page.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
-class FinanceHomePage extends StatelessWidget {
+import '../widgets/error_state_widget.dart';
+import '../widgets/loading_indicator.dart';
+import '../controllers/finance_controller.dart';
+import 'add_transaction_page.dart';
+import 'all_transactions_page.dart';
+import '../models/saving_goal_model.dart';
+import '../models/transaction_model.dart';
+
+/// Finance home — real data driven by [FinanceController].
+///
+/// State handling (GetX / reactive):
+///  * `loading`  -> centered spinner
+///  * `error`    -> error card with Retry button
+///  * empty data -> friendly empty state
+///  * otherwise  -> balance card + spending breakdown + recent transactions
+class FinanceHomePage extends GetView<FinanceController> {
   const FinanceHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final c = controller;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF0F3FF),
       body: SafeArea(
@@ -15,7 +32,6 @@ class FinanceHomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Todo: 1. Header: Title + Add button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -24,13 +40,15 @@ class FinanceHomePage extends StatelessWidget {
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
+                    onPressed: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AddTransactionPage(),
+                          builder: (context) => const AddTransactionPage(),
                         ),
                       );
+                      // Refresh after a transaction is created/edited.
+                      controller.loadAll();
                     },
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add'),
@@ -46,136 +64,160 @@ class FinanceHomePage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Todo: 2. Balance Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF4A6CF7), Color(0xFF7B4AF7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
+              Obx(() {
+                if (controller.loading.value) {
+                  return const Expanded(child: LoadingIndicator());
+                }
+                if (controller.error.value != null) {
+                  return Expanded(
+                    child: ErrorStateWidget(
+                      message: controller.error.value!,
+                      onRetry: controller.loadAll,
+                    ),
+                  );
+                }
+                final balance = controller.totalBalance;
+                final income = controller.totalIncome;
+                final expense = controller.totalExpense;
+
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'TOTAL BALANCE',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        letterSpacing: 1,
+                    // Balance card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4A6CF7), Color(0xFF7B4AF7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '\$1,250.30',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'TOTAL BALANCE',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _money(balance),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _balanceStat('↗ Income', _money(income)),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _balanceStat(
+                                  '↘ Expenses',
+                                  '-\u0024' +
+                                      NumberFormat('#,##0.00')
+                                          .format(expense)
+                                          .replaceAll('-', ''),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _balanceStat('↗ Income', '\$3,150')),
-                        const SizedBox(width: 12),
-                        Expanded(child: _balanceStat('↘ Expenses', '\$205.70')),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
 
-              //Todo: 3. Spending Breakdown
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Spending Breakdown',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    // Spending breakdown
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Spending Breakdown',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _SpendingBreakdown(categories: c.expenseCategories),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _categoryCircle('🍔', '42%', 'Food'),
-                        _categoryCircle('🚌', '22%', 'Transport'),
-                        _categoryCircle('📚', '26%', 'Education'),
-                        _categoryCircle('📦', '10%', 'Other'),
+                        const Text(
+                          'Recent Transactions',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const AllTransactionsPage(),
+                              ),
+                            );
+                            controller.loadAll();
+                          },
+                          child: const Text('See All'),
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
+                    const SizedBox(height: 8),
 
-              // Todo: 4. Recent Transactions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Recent Transactions',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AllTransactionsPage(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'See All',
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView(
-                  children: [
-                    _transactionTile(
-                      '☕',
-                      'Morning Coffee',
-                      'Food · Today',
-                      '-\$4.50',
-                      false,
-                    ),
-                    _transactionTile(
-                      '💳',
-                      'Monthly Salary',
-                      'Income · Jun 1',
-                      '+\$2800.00',
-                      true,
-                    ),
-                    _transactionTile(
-                      '📚',
-                      'University Books',
-                      'Education · Jun 2',
-                      '-\$67.00',
-                      false,
+                    Expanded(
+                      child: c.transactions.isEmpty
+                          ? const _EmptyTransactions()
+                          : ListView.separated(
+                              itemCount: c.recentTransactions.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 4),
+                              itemBuilder: (context, index) {
+                                final tx = c.recentTransactions[index];
+                                return _TransactionTile(
+                                  tx: tx,
+                                  onTap: () async {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const AddTransactionPage(),
+                                      ),
+                                    );
+                                    controller.loadAll();
+                                  },
+                                );
+                              },
+                            ),
                     ),
                   ],
-                ),
-              ),
+                );
+              }),
             ],
           ),
         ),
@@ -183,7 +225,12 @@ class FinanceHomePage extends StatelessWidget {
     );
   }
 
-  // ! Helper widget: Income/Expense stat box inside balance card
+  String _money(double amount) {
+    final v = amount.abs();
+    final s = NumberFormat('#,##0.00').format(v);
+    return amount < 0 ? '-\u0024$s' : '\u0024$s';
+  }
+
   Widget _balanceStat(String label, String amount) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -211,44 +258,110 @@ class FinanceHomePage extends StatelessWidget {
       ),
     );
   }
+}
 
-  // ! Helper widget: category circle in Spending Breakdown
-  Widget _categoryCircle(String emoji, String percent, String label) {
-    return Column(
+class _SpendingBreakdown extends StatelessWidget {
+  const _SpendingBreakdown({required this.categories});
+
+  final List<TransactionCategory> categories;
+
+  @override
+  Widget build(BuildContext context) {
+    if (categories.isEmpty) {
+      return const Text(
+        'No categories yet. Add a transaction to get started.',
+        style: TextStyle(color: Colors.grey, fontSize: 13),
+      );
+    }
+    final visible = categories.take(4).toList();
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: Colors.grey[100],
-          child: Text(emoji, style: const TextStyle(fontSize: 20)),
-        ),
-        const SizedBox(height: 6),
-        Text(percent, style: const TextStyle(fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        for (final cat in visible)
+          Column(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.grey[100],
+                child: Text(cat.icon, style: const TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                cat.name,
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ],
+          ),
       ],
     );
   }
+}
 
-  //  ! Helper widget: one row in Recent Transactions list
-  Widget _transactionTile(
-    String emoji,
-    String title,
-    String subtitle,
-    String amount,
-    bool isIncome,
-  ) {
+class _TransactionTile extends StatelessWidget {
+  const _TransactionTile({required this.tx, this.onTap});
+
+  final TransactionModel tx;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isIncome = tx.type == 'income' || tx.type == 'INCOME';
+    final sign = isIncome ? '+' : '-';
+    final amount =
+        '\u0024${NumberFormat('#,##0.00').format(tx.amount.toDouble())}';
+    final label = _typeLabel(tx.type obvious);
     return ListTile(
+      onTap: onTap,
       leading: CircleAvatar(
         backgroundColor: Colors.grey[100],
-        child: Text(emoji),
+        child: Text(tx.category.icon),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      title: Text(
+        tx.note?.isNotEmpty == true ? tx.note! : tx.category.name,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        '${tx.category.name} · ${_dateLabel(tx.date)}',
+        style: const TextStyle(fontSize: 12),
+      ),
       trailing: Text(
-        amount,
+        '$sign\u0024${NumberFormat('#,##0.00').format(tx.amount.toDouble())}',
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: isIncome ? Colors.green : Colors.black87,
         ),
+      ),
+    );
+  }
+
+  String _typeLabel(String t) =>
+      (t == 'income' || t == 'INCOME') ? 'Income' : 'Expense';
+
+  String _dateLabel(DateTime d) =>
+      '${d.day}/${d.month}/${d.year}';
+}
+
+class _EmptyTransactions extends StatelessWidget {
+  const _EmptyTransactions();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('🧾', style: TextStyle(fontSize: 48)),
+          SizedBox(height: 8),
+          Text(
+            'No transactions yet',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'Tap Add to record your first transaction.',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
       ),
     );
   }

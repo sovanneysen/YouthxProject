@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../auth/controllers/auth_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/selectable_chip.dart';
 import '../../../core/widgets/user_avatar.dart';
-import '../../../core/network/app_config.dart';
 import '../../../data/models/feeling_model.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/models/user_model.dart';
@@ -88,15 +88,32 @@ class _CreatePostViewState extends State<CreatePostView> {
         children: [
           Row(
             children: [
-              UserAvatar(user: UserModel(id: AppConfig.currentUserId, name: 'You'), size: 44),
-              const SizedBox(width: 12),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('You', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                  Text('Posting to Community', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                ],
-              ),
+              Obx(() {
+                final user = Get.find<AuthController>().currentUser.value;
+                final me = UserModel(
+                  id: user?.id ?? '',
+                  name: (user != null && user.fullName.isNotEmpty)
+                      ? user.fullName
+                      : 'You',
+                );
+                return Row(
+                  children: [
+                    UserAvatar(user: me, size: 44),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(me.name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 14)),
+                        const Text('Posting to Community',
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textSecondary)),
+                      ],
+                    ),
+                  ],
+                );
+              }),
             ],
           ),
           const SizedBox(height: 16),

@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/network/app_config.dart';
+import '../../../auth/controllers/auth_controller.dart';
+import '../../../core/network/api_client.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/community_repository.dart';
@@ -63,34 +64,76 @@ class CreatePostController extends GetxController {
 
   bool get canSubmit => captionController.text.trim().isNotEmpty || images.isNotEmpty;
 
+  /// Two-step publish: create the post first, then upload each local photo
+  /// against the new post id. If any upload fails, the just-created post is
+  /// deleted so the backend never keeps a half-published post, and the error
+  /// is surfaced for retry with the composed content preserved.
   Future<bool> submit() async {
     if (!canSubmit) return false;
     posting.value = true;
+    String? createdPostId;
     try {
+      final localFiles = images.where((p) => !p.startsWith('http')).toList();
+
       if (isEditing) {
         editingPost!
           ..caption = captionController.text.trim()
-          ..imagePaths = List.of(images)
           ..feelingId = selectedFeeling.value
           ..tags = List.of(selectedTags);
         await repository.updatePost(editingPost!);
+        // Locally picked images cannot be replaced after edit (no contract),
+        // so they are dropped; only the caption/feeling/tags are updated.
       } else {
-        final me = UserModel(id: AppConfig.currentUserId, name: 'You');
+        final author = currentAuthor;
         final post = PostModel(
           id: const Uuid().v4(),
-          author: me,
+          author: author,
           createdAt: DateTime.now(),
           caption: captionController.text.trim(),
           imagePaths: List.of(images),
           feelingId: selectedFeeling.value,
           tags: List.of(selectedTags),
         );
-        await repository.createPost(post);
+        final created = await repository.createPost(post);
+        createdPostId = created.id;
+
+        if (localFiles.isNotEmpty) {
+          for (final file in localFiles) {
+            await repository.uploadPhoto(createdPostId, file);
+          }
+        }
       }
       return true;
+    } catch (e) {
+      // Roll back the half-published post when uploads fail part-way.
+      if (!isEditing && createdPostId != null) {
+        try {
+          await repository.deletePost(createdPostId);
+        } catch (_) {}
+      }
+      // Keep the composed content in the sheet so the user can retry.
+      Get.snackbar(
+        'Could not publish your post',
+        e is ApiException ? e.message : 'Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(12),
+        borderRadius: 12,
+      );
+      return false;
     } finally {
       posting.value = false;
     }
+  }
+
+  /// The signed-in user for the composer header. Falls back to a neutral
+  /// placeholder when no session is available (e.g. unit tests).
+  UserModel get currentAuthor {
+    final user = Get.isRegistered<AuthController>()
+        ? Get.find<AuthController>().currentUser.value
+        : null;
+    final name =
+        (user != null && user.fullName.isNotEmpty) ? user.fullName : 'You';
+    return UserModel(id: user?.id ?? '', name: name);
   }
 
   @override

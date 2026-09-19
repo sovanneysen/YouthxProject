@@ -81,6 +81,34 @@ class CommunityView extends GetView<CommunityController> {
                       ),
                     );
                   }
+                  final feedError = controller.feedError.value;
+                  if (feedError != null) {
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 60),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              const Icon(Icons.cloud_off,
+                                  color: AppColors.textMuted, size: 32),
+                              const SizedBox(height: 10),
+                              Text(
+                                feedError,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    color: AppColors.textSecondary),
+                              ),
+                              const SizedBox(height: 12),
+                              OutlinedButton(
+                                onPressed: controller.loadFeed,
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
                   final posts = controller.filteredPosts;
                   if (posts.isEmpty) {
                     return const SliverToBoxAdapter(
@@ -141,7 +169,7 @@ class _PostCardBound extends GetView<CommunityController> {
         if (!context.mounted) return;
         _showWhiteSnackBar(
           context,
-          post.savedByMe ? 'Saved to your profile' : 'Removed from saved posts',
+          post.savedByMe ? 'Saved' : 'Removed from saved',
         );
       },
       onShare: () async {
@@ -149,7 +177,7 @@ class _PostCardBound extends GetView<CommunityController> {
         if (!context.mounted) return;
         _showWhiteSnackBar(
           context,
-          post.sharedByMe ? 'Shared to your profile' : 'Removed from shared posts',
+          post.sharedByMe ? 'Shared' : 'Removed from shared',
         );
       },
       onEdit: () => Get.to(() => CreatePostView(editingPost: post)),

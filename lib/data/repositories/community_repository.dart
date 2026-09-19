@@ -14,10 +14,20 @@ abstract class CommunityRepository {
   Future<void> toggleSave(String postId);
   Future<void> toggleShare(String postId);
 
+  /// Uploads a local photo for [postId] and returns its public URL.
+  Future<String> uploadPhoto(String postId, String filePath);
+
   Future<List<UserModel>> searchUsers(String query);
 
   Future<List<CommentModel>> fetchComments(String postId);
-  Future<void> addComment(String postId, String text, {String? parentId});
+
+  /// Returns the persisted comment so callers (and realtime subscribers) can
+  /// insert it without a refetch. Null when the backend did not return it.
+  Future<CommentModel?> addComment(String postId, String text,
+      {String? parentId});
+
+  Future<void> deleteComment(String postId, String commentId);
+
   Stream<CommentModel> watchComments(String postId);
 
   Future<List<StoryModel>> fetchStories();
@@ -141,6 +151,12 @@ class MockCommunityRepository implements CommunityRepository {
   }
 
   @override
+  Future<String> uploadPhoto(String postId, String filePath) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return 'mock://uploads/$postId/${filePath.split('/').last}';
+  }
+
+  @override
   Future<List<UserModel>> searchUsers(String query) async {
     await Future.delayed(const Duration(milliseconds: 150));
     final q = query.trim().toLowerCase();
@@ -164,7 +180,8 @@ class MockCommunityRepository implements CommunityRepository {
   }
 
   @override
-  Future<void> addComment(String postId, String text, {String? parentId}) async {
+  Future<CommentModel?> addComment(String postId, String text,
+      {String? parentId}) async {
     final comment = CommentModel(
       id: _uuid.v4(),
       postId: postId,
@@ -185,6 +202,14 @@ class MockCommunityRepository implements CommunityRepository {
       'comment',
       comment.toJson(),
     );
+    return comment;
+  }
+
+  @override
+  Future<void> deleteComment(String postId, String commentId) async {
+    _comments[postId]?.removeWhere((c) => c.id == commentId);
+    final post = _posts.firstWhere((p) => p.id == postId);
+    post.commentCount = (post.commentCount - 1).clamp(0, 1 << 31).toInt();
   }
 
   @override

@@ -4,6 +4,7 @@ import '../../auth/views/home_screen.dart';
 import '../../modules/community/binding/community_binding.dart';
 import '../../modules/community/views/community_view.dart';
 import '../../modules/finance/views/finance_home_page.dart';
+import '../../modules/growth_center/binding/growth_binding.dart';
 import '../../modules/growth_center/views/growth_view.dart';
 import '../../modules/profile/views/profile_screen.dart';
 
@@ -27,6 +28,8 @@ class _AppShellState extends State<AppShell> {
     // CommunityView is a GetView that requires CommunityController before it
     // builds. CommunityBinding is idempotent, so it is safe to run here.
     CommunityBinding().dependencies();
+    // GrowthView needs GrowthController (gets its own lists from REST).
+    GrowthBinding().dependencies();
   }
 
   @override

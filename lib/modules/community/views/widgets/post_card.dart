@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -7,7 +8,7 @@ import '../../../../core/widgets/user_avatar.dart';
 import '../../../../data/models/feeling_model.dart';
 import '../../../../data/models/post_model.dart';
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
   final PostModel post;
   final bool isOwner;
   final VoidCallback onLike;
@@ -31,11 +32,16 @@ class PostCard extends StatelessWidget {
     required this.onAuthorTap,
   });
 
-  FeelingModel? get _feeling =>
-      post.feelingId == null ? null : FeelingCatalog.all.firstWhere((f) => f.id == post.feelingId);
+  @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<PostCard> {
+  int _page = 0;
 
   @override
   Widget build(BuildContext context) {
+    final post = widget.post;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -50,14 +56,14 @@ class PostCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              UserAvatar(user: post.author, onTap: onAuthorTap),
+              UserAvatar(user: post.author, onTap: widget.onAuthorTap),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onTap: onAuthorTap,
+                      onTap: widget.onAuthorTap,
                       child: Text(post.author.name,
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                     ),
@@ -69,13 +75,13 @@ class PostCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (isOwner)
+              if (widget.isOwner)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_horiz, color: AppColors.textSecondary),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   onSelected: (value) {
-                    if (value == 'edit') onEdit();
-                    if (value == 'delete') onDelete();
+                    if (value == 'edit') widget.onEdit();
+                    if (value == 'delete') widget.onDelete();
                   },
                   itemBuilder: (_) => [
                     const PopupMenuItem(
@@ -126,9 +132,33 @@ class PostCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               child: AspectRatio(
                 aspectRatio: 16 / 11,
-                child: _PostImage(path: post.imagePaths.first),
+                child: _PostImages(
+                  paths: post.imagePaths,
+                  onPageChanged: (p) => setState(() => _page = p),
+                ),
               ),
             ),
+            if (post.imagePaths.length > 1) ...[
+              const SizedBox(height: 8),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (int i = 0; i < post.imagePaths.length; i++)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        width: i == _page ? 16 : 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: i == _page ? AppColors.primary : AppColors.border,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ],
           const SizedBox(height: 12),
           Row(
@@ -137,33 +167,53 @@ class PostCard extends StatelessWidget {
                 icon: post.likedByMe ? Icons.favorite : Icons.favorite_border,
                 color: post.likedByMe ? AppColors.danger : AppColors.textSecondary,
                 label: '${post.likeCount}',
-                onTap: onLike,
+                onTap: widget.onLike,
               ),
               const SizedBox(width: 20),
               _ActionButton(
                 icon: Icons.mode_comment_outlined,
                 color: AppColors.textSecondary,
                 label: '${post.commentCount}',
-                onTap: onComment,
+                onTap: widget.onComment,
               ),
               const Spacer(),
               _ActionButton(
                 icon: post.savedByMe ? Icons.bookmark : Icons.bookmark_border,
                 color: post.savedByMe ? AppColors.primary : AppColors.textSecondary,
                 label: '',
-                onTap: onSave,
+                onTap: widget.onSave,
               ),
               const SizedBox(width: 16),
               _ActionButton(
                 icon: Icons.ios_share,
                 color: post.sharedByMe ? AppColors.primary : AppColors.textSecondary,
                 label: '',
-                onTap: onShare,
+                onTap: widget.onShare,
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  FeelingModel? get _feeling => widget.post.feelingId == null
+      ? null
+      : FeelingCatalog.all.firstWhere((f) => f.id == widget.post.feelingId);
+}
+
+class _PostImages extends StatelessWidget {
+  final List<String> paths;
+  final ValueChanged<int> onPageChanged;
+
+  const _PostImages({required this.paths, required this.onPageChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageView.builder(
+      itemCount: paths.length,
+      onPageChanged: onPageChanged,
+      itemBuilder: (context, index) => _PostImage(path: paths[index]),
     );
   }
 }
@@ -175,7 +225,26 @@ class _PostImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (path.startsWith('http')) {
-      return Image.network(path, fit: BoxFit.cover);
+      return CachedNetworkImage(
+        imageUrl: path,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: AppColors.surfaceAlt,
+          child: const Icon(
+            Icons.image_outlined,
+            color: AppColors.textMuted,
+            size: 40,
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          color: AppColors.surfaceAlt,
+          child: const Icon(
+            Icons.image_outlined,
+            color: AppColors.textMuted,
+            size: 40,
+          ),
+        ),
+      );
     }
     final file = File(path);
     if (file.existsSync()) {

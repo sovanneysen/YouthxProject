@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 import 'package:youthx/auth/views/home_screen.dart';
+import 'package:youthx/core/network/initial_binding.dart';
 import 'package:youthx/core/shell/app_shell.dart';
+import 'package:youthx/data/repositories/community_repository.dart';
+import 'package:youthx/data/repositories/growth_repository.dart';
 import 'package:youthx/modules/community/views/community_view.dart';
 import 'package:youthx/modules/finance/views/finance_home_page.dart';
 import 'package:youthx/modules/growth_center/views/growth_view.dart';
@@ -16,7 +19,18 @@ void main() {
       );
 
   Future<void> pumpShell(WidgetTester tester) async {
-    await tester.pumpWidget(GetMaterialApp(home: const AppShell()));
+    // Widget tests must stay offline: pre-register the in-memory repository
+    // so CommunityBinding keeps it instead of wiring the REST repo (which
+    // would try a real HTTP call inside the test harness).
+    if (!Get.isRegistered<CommunityRepository>()) {
+      Get.put<CommunityRepository>(MockCommunityRepository(), permanent: true);
+    }
+    if (!Get.isRegistered<GrowthRepository>()) {
+      Get.put<GrowthRepository>(MockGrowthRepository(), permanent: true);
+    }
+    await tester.pumpWidget(
+      GetMaterialApp(home: const AppShell(), initialBinding: InitialBinding()),
+    );
     await tester.pumpAndSettle();
   }
 
