@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../auth/views/home_screen.dart';
 import '../../modules/community/binding/community_binding.dart';
 import '../../modules/community/views/community_view.dart';
+import '../../modules/finance/bindings/finance_binding.dart';
 import '../../modules/finance/views/finance_home_page.dart';
 import '../../modules/growth_center/binding/growth_binding.dart';
 import '../../modules/growth_center/views/growth_view.dart';
@@ -30,6 +31,9 @@ class _AppShellState extends State<AppShell> {
     CommunityBinding().dependencies();
     // GrowthView needs GrowthController (gets its own lists from REST).
     GrowthBinding().dependencies();
+    // FinanceHomePage is a GetView<FinanceController>; FinanceBinding is
+    // idempotent (mock-safe guard), so it is safe to run here like the others.
+    FinanceBinding().dependencies();
   }
 
   @override

@@ -6,6 +6,7 @@ import 'package:youthx/auth/views/home_screen.dart';
 import 'package:youthx/core/network/initial_binding.dart';
 import 'package:youthx/core/shell/app_shell.dart';
 import 'package:youthx/data/repositories/community_repository.dart';
+import 'package:youthx/data/repositories/finance_repository.dart';
 import 'package:youthx/data/repositories/growth_repository.dart';
 import 'package:youthx/modules/community/views/community_view.dart';
 import 'package:youthx/modules/finance/views/finance_home_page.dart';
@@ -27,6 +28,12 @@ void main() {
     }
     if (!Get.isRegistered<GrowthRepository>()) {
       Get.put<GrowthRepository>(MockGrowthRepository(), permanent: true);
+    }
+    if (!Get.isRegistered<FinanceRepository>()) {
+      Get.put<FinanceRepository>(MockFinanceRepository(), permanent: true);
+    }
+    if (!Get.isRegistered<FinanceRepository>()) {
+      Get.put<FinanceRepository>(MockFinanceRepository(), permanent: true);
     }
     await tester.pumpWidget(
       GetMaterialApp(home: const AppShell(), initialBinding: InitialBinding()),

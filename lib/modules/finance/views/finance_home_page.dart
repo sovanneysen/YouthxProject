@@ -309,7 +309,7 @@ class _TransactionTile extends StatelessWidget {
     final sign = isIncome ? '+' : '-';
     final amount =
         '\u0024${NumberFormat('#,##0.00').format(tx.amount.toDouble())}';
-    final label = _typeLabel(tx.type obvious);
+    final label = _typeLabel(tx.type);
     return ListTile(
       onTap: onTap,
       leading: CircleAvatar(

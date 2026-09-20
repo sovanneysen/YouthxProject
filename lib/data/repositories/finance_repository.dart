@@ -51,7 +51,7 @@ class MockFinanceRepository implements FinanceRepository {
     DateTime d(int days) => now.subtract(Duration(days: days));
 
     _transactions.addAll([
-      _tx('Income', 'income', 830.00, note: 'Monthly salary', date: d(0)),
+      _tx('Salary', 'income', 830.00, note: 'Monthly salary', date: d(0)),
       _tx('Food', 'expense', -4.50, note: 'Morning coffee', date: d(0)),
       _tx('Transport', 'expense', -45.00, note: 'Bus pass', date: d(1)),
       _tx('Shopping', 'expense', -89.20, note: 'Groceries', date: d(2)),
