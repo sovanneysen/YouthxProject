@@ -67,14 +67,12 @@ class FinanceHomePage extends GetView<FinanceController> {
               Expanded(
                 child: Obx(() {
                 if (controller.loading.value) {
-                  return const Expanded(child: LoadingIndicator());
+                  return const LoadingIndicator();
                 }
                 if (controller.error.value != null) {
-                  return Expanded(
-                    child: ErrorStateWidget(
-                      message: controller.error.value!,
-                      onRetry: controller.loadAll,
-                    ),
+                  return ErrorStateWidget(
+                    message: controller.error.value!,
+                    onRetry: controller.loadAll,
                   );
                 }
                 final balance = controller.totalBalance;
