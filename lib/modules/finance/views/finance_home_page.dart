@@ -64,7 +64,8 @@ class FinanceHomePage extends GetView<FinanceController> {
               ),
               const SizedBox(height: 16),
 
-              Obx(() {
+              Expanded(
+                child: Obx(() {
                 if (controller.loading.value) {
                   return const Expanded(child: LoadingIndicator());
                 }
@@ -218,6 +219,7 @@ class FinanceHomePage extends GetView<FinanceController> {
                   ],
                 );
               }),
+              ),
             ],
           ),
         ),
