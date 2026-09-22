@@ -21,12 +21,12 @@ class YouthXApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'YouthX',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.light,
       theme: AppTheme.light,
-      darkTheme: AppTheme.light,
+      darkTheme: AppTheme.dark,
       home: const SplashScreen(),
       initialBinding: InitialBinding(),
       getPages: AppPages.routes,
     );
   }
 }
+
