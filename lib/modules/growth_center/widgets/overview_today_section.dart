@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 import '../models/task_model.dart';
 import '../utils/task_priority_style.dart';
 
@@ -26,12 +27,12 @@ class OverviewTodaySection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
               'Nothing due this day 🎉',
-              style: TextStyle(color: Colors.grey.shade500),
+              style: TextStyle(color: context.textSecondaryColor),
             ),
           )
         else
@@ -52,7 +53,7 @@ class _TodayItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -81,7 +82,7 @@ class _TodayItem extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: task.isCompleted
                         ? Colors.grey.shade400
-                        : const Color(0xFF1E1B2E),
+                        : context.textPrimaryColor,
                     decoration: task.isCompleted
                         ? TextDecoration.lineThrough
                         : TextDecoration.none,

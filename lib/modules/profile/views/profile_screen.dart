@@ -1,8 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../auth/controllers/auth_controller.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../routes/app_routes.dart';
 import '../profile_model.dart';
 import 'followers_screen.dart';
@@ -25,11 +26,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const Color gradientBlue = Color(0xFF3B82F6);
   static const Color gradientPurple = Color(0xFF7C5CF0);
  
-  bool _darkMode = false;
   bool _menuOpen = false;
   PostTab _selectedTab = PostTab.myPosts;
 
   final AuthController _auth = Get.find<AuthController>();
+  final ThemeController _theme = Get.find<ThemeController>();
 
   String _initials(String? fullName) {
     if (fullName == null || fullName.trim().isEmpty) return '…';
@@ -38,32 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final first = parts.first.isNotEmpty ? parts.first[0] : '';
     final last = parts.length > 1 && parts.last.isNotEmpty ? parts.last[0] : '';
     return (first + last).toUpperCase();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDarkMode();
-  }
-
-  Future<void> _loadDarkMode() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (!mounted) return;
-      setState(() => _darkMode = prefs.getBool('darkMode') ?? false);
-    } catch (_) {
-      // Preferences unavailable; fall back to the in-memory default.
-    }
-  }
-
-  Future<void> _setDarkMode(bool value) async {
-    setState(() => _darkMode = value);
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('darkMode', value);
-    } catch (_) {
-      // Non-critical preference; keep the in-memory value.
-    }
   }
  
   // TODO: replace with data fetched from your backend / database.
@@ -170,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F5FB),
+      backgroundColor: context.isDark ? context.bg : const Color(0xFFF4F5FB),
       body: SafeArea(
         bottom: false,
         child: Stack(
@@ -192,10 +167,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Obx(
                                 () => Text(
                                   _auth.currentUser.value?.fullName ?? '…',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1F2333),
+                                    color: context.textPrimaryColor,
                                   ),
                                 ),
                               ),
@@ -204,7 +179,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 () => Text(
                                   _auth.currentUser.value?.email ?? '',
                                   style: TextStyle(
-                                      fontSize: 14, color: Colors.grey.shade600),
+                                      fontSize: 14,
+                                      color: context.textSecondaryColor),
                                 ),
                               ),
                               const SizedBox(height: 20),
@@ -302,7 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         width: 230,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
@@ -319,7 +295,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             for (final item in _menuItems) ...[
               if (item.isDanger)
                 Divider(
-                    height: 1, color: Colors.grey.shade200, indent: 12, endIndent: 12),
+                    height: 1,
+                    color: context.borderColor,
+                    indent: 12,
+                    endIndent: 12),
               _buildMenuRow(item),
             ],
           ],
@@ -332,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return InkWell(
       onTap: () {
         if (item.isToggle) {
-          _setDarkMode(!_darkMode);
+          _theme.toggle();
           return;
         }
         setState(() => _menuOpen = false);
@@ -375,17 +354,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: item.isDanger ? Colors.redAccent : const Color(0xFF1F2333),
+                  color: item.isDanger
+                      ? Colors.redAccent
+                      : context.textPrimaryColor,
                 ),
               ),
             ),
             if (item.isToggle)
               Transform.scale(
                 scale: 0.75,
-                child: Switch(
-                  value: _darkMode,
-                  activeColor: primaryPurple,
-                  onChanged: (val) => _setDarkMode(val),
+                child: Obx(
+                  () => Switch(
+                    value: _theme.isDark.value,
+                    activeColor: primaryPurple,
+                    onChanged: (_) => _theme.toggle(),
+                  ),
                 ),
               ),
           ],
@@ -426,7 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       height: 96,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white,
+        color: context.cardBg,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -481,8 +464,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
  
-  Widget _statDivider() => Container(width: 1, height: 36, color: Colors.grey.shade200);
- 
+Widget _statDivider() =>
+      Container(width: 1, height: 36, color: context.borderColor);
+
   Widget _statItem(String value, String label, {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -490,10 +474,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         children: [
           Text(value,
-              style: const TextStyle(
-                  fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1F2333))),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: context.textPrimaryColor)),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+          Text(label,
+              style:
+                  TextStyle(fontSize: 13, color: context.textSecondaryColor)),
         ],
       ),
     );
@@ -509,9 +497,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Achievements',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1F2333)),
+            style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimaryColor),
           ),
           const SizedBox(height: 16),
           Row(
@@ -548,7 +539,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
           ),
         ),
       ],
@@ -561,7 +552,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        border: Border(bottom: BorderSide(color: context.borderColor)),
       ),
       child: Row(
         children: [
@@ -594,7 +585,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              color: selected ? primaryPurple : Colors.grey.shade600,
+              color: selected ? primaryPurple : context.textSecondaryColor,
             ),
           ),
         ),
@@ -608,7 +599,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_activePosts.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Text('No posts yet', style: TextStyle(color: Colors.grey.shade500)),
+        child: Text('No posts yet',
+            style: TextStyle(color: context.textSecondaryColor)),
       );
     }
     return Column(
@@ -642,31 +634,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(post.authorName,
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                   Text(post.timeAgo,
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                      style: TextStyle(
+                          fontSize: 11, color: context.textSecondaryColor)),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(post.caption, style: const TextStyle(fontSize: 13, color: Color(0xFF1F2333))),
+          Text(post.caption,
+              style: TextStyle(fontSize: 13, color: context.textPrimaryColor)),
           const SizedBox(height: 10),
           Container(
             height: 110,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFF4F5FB),
+              color: context.bg,
               borderRadius: BorderRadius.circular(10),
             ),
           ),
           const SizedBox(height: 10),
-          Divider(height: 1, color: Colors.grey.shade200),
+          Divider(height: 1, color: context.borderColor),
           const SizedBox(height: 8),
           Row(
             children: [
               _postAction(
                 icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
                 label: '${post.likeCount}',
-                color: post.isLiked ? Colors.redAccent : Colors.grey.shade600,
+                color: post.isLiked ? Colors.redAccent : context.textSecondaryColor,
                 onTap: () => setState(() {
                   post.isLiked = !post.isLiked;
                   // TODO: persist like to database
@@ -676,7 +670,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _postAction(
                 icon: Icons.share_outlined,
                 label: 'Share',
-                color: Colors.grey.shade600,
+                color: context.textSecondaryColor,
                 onTap: () {
                   // TODO: open share sheet / write to post_shares table
                 },
@@ -685,7 +679,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _postAction(
                 icon: post.isSaved ? Icons.bookmark : Icons.bookmark_border,
                 label: 'Save',
-                color: post.isSaved ? primaryPurple : Colors.grey.shade600,
+                color: post.isSaved ? primaryPurple : context.textSecondaryColor,
                 onTap: () => setState(() {
                   post.isSaved = !post.isSaved;
                   // TODO: persist save to post_saves table
@@ -720,7 +714,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
-      color: Colors.white,
+      color: context.cardBg,
       borderRadius: BorderRadius.circular(18),
       boxShadow: [
         BoxShadow(

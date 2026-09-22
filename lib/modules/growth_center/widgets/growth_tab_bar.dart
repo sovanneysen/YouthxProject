@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 
 class GrowthTab {
   final String emoji;
@@ -41,7 +42,7 @@ class GrowthTabBar extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               decoration: BoxDecoration(
-                color: isActive ? tab.activeColor : const Color(0xFFF1F2F6),
+                color: isActive ? tab.activeColor : context.cardBgAlt,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Row(
@@ -54,7 +55,7 @@ class GrowthTabBar extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: isActive ? Colors.white : const Color(0xFF4B5563),
+                      color: isActive ? Colors.white : context.textSecondaryColor,
                     ),
                   ),
                 ],

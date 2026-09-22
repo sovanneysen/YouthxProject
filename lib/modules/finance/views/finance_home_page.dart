@@ -9,6 +9,7 @@ import 'add_transaction_page.dart';
 import 'all_transactions_page.dart';
 import '../models/saving_goal_model.dart';
 import '../models/transaction_model.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Finance home — real data driven by [FinanceController].
 ///
@@ -25,7 +26,8 @@ class FinanceHomePage extends GetView<FinanceController> {
     final c = controller;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F3FF),
+      backgroundColor:
+          context.isDark ? context.bg : const Color(0xFFF0F3FF),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -142,7 +144,7 @@ class FinanceHomePage extends GetView<FinanceController> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.cardBg,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
@@ -328,7 +330,7 @@ class _TransactionTile extends StatelessWidget {
         '$sign\u0024${NumberFormat('#,##0.00').format(tx.amount.toDouble())}',
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: isIncome ? Colors.green : Colors.black87,
+          color: isIncome ? Colors.green : context.textPrimaryColor,
         ),
       ),
     );

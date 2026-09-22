@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 import '../../../core/widgets/card_overflow_menu.dart';
 import '../models/habit_model.dart';
 
@@ -22,7 +23,7 @@ class HabitCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -51,10 +52,10 @@ class HabitCard extends StatelessWidget {
               children: [
                 Text(
                   habit.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E1B2E),
+                    color: context.textPrimaryColor,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -64,7 +65,7 @@ class HabitCard extends StatelessWidget {
                       '${habit.frequencyLabel} · ',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade600,
+                        color: context.textSecondaryColor,
                       ),
                     ),
                     Text('🔥 ', style: const TextStyle(fontSize: 13)),
@@ -117,7 +118,7 @@ class _CompletionToggle extends StatelessWidget {
           shape: BoxShape.circle,
           color: isCompleted ? color : Colors.transparent,
           border: Border.all(
-            color: isCompleted ? color : const Color(0xFFD1D5DB),
+            color: isCompleted ? color : context.borderColor,
             width: 2,
           ),
         ),

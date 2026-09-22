@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 import '../../../../core/widgets/task_card.dart';
 import '../../../../core/widgets/confirm_delete_dialog.dart';
 import '../../models/task_model.dart';
@@ -101,12 +102,12 @@ class _TodoViewState extends State<TodoView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'To-Do List',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1E1B2E),
+                  color: context.textPrimaryColor,
                 ),
               ),
               GestureDetector(
@@ -126,7 +127,7 @@ class _TodoViewState extends State<TodoView> {
           const SizedBox(height: 4),
           Text(
             '$_completedCount/$_totalCount completed today ✅',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 14, color: context.textSecondaryColor),
           ),
           const SizedBox(height: 16),
           Row(
@@ -190,14 +191,14 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? Colors.blue : Colors.white,
+          color: selected ? Colors.blue : context.cardBg,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            color: selected ? Colors.white : Colors.grey.shade700,
+            color: selected ? Colors.white : context.textSecondaryColor,
           ),
         ),
       ),

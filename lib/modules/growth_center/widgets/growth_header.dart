@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 
 class GrowthHeader extends StatelessWidget {
   final String badgeEmoji;
@@ -26,16 +27,16 @@ class GrowthHeader extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.8,
-                    color: Colors.grey.shade600,
+                    color: context.textSecondaryColor,
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'Level up daily 🚀',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF1E1B2E),
+                    color: context.textPrimaryColor,
                   ),
                 ),
               ],

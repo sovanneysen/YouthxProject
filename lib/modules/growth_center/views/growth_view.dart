@@ -11,6 +11,7 @@ import '../views/todo/todo_view.dart';
 import 'goals_view.dart';
 import '../widgets/growth_header.dart';
 import '../widgets/growth_tab_bar.dart';
+import '../../../core/theme/app_theme.dart';
 
 class GrowthView extends StatelessWidget {
   const GrowthView({super.key});
@@ -53,12 +54,12 @@ class _GrowthScreenState extends State<_GrowthScreen> {
   Widget build(BuildContext context) {
     final controller = widget.controller;
     return Scaffold(
-      backgroundColor: const Color(0xFFEFF1FB),
+      backgroundColor: context.isDark ? context.bg : const Color(0xFFEFF1FB),
       body: SafeArea(
         child: Column(
           children: [
             Container(
-              color: Colors.white,
+              color: context.cardBg,
               child: Column(
                 children: [
                   GrowthHeader(

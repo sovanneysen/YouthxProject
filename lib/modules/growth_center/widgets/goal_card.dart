@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 import 'package:youthx/core/widgets/card_overflow_menu.dart';
 import '../models/goal_model.dart';
 import '../utils/category_style.dart';
@@ -30,7 +31,7 @@ class GoalCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -62,10 +63,10 @@ class GoalCard extends StatelessWidget {
                     children: [
                       Text(
                         goal.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E1B2E),
+                          color: context.textPrimaryColor,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -73,7 +74,7 @@ class GoalCard extends StatelessWidget {
                         '${CategoryStyle.displayLabel(goal.category, goal.customCategoryLabel)} · ${goal.targetDate}',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey.shade600,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                     ],
@@ -91,7 +92,7 @@ class GoalCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
+                  color: context.textSecondaryColor,
                 ),
               ),
             ],
@@ -102,12 +103,13 @@ class GoalCard extends StatelessWidget {
                   Icon(
                     Icons.notifications_none_rounded,
                     size: 16,
-                    color: Colors.grey.shade500,
+                    color: context.textSecondaryColor,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Daily ${goal.reminderTime ?? ''}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    style: TextStyle(
+                        fontSize: 13, color: context.textSecondaryColor),
                   ),
                 ],
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 import 'package:youthx/modules/growth_center/widgets/overview_calendar_card.dart';
 import 'package:youthx/modules/growth_center/widgets/overview_nav_arrow.dart';
 import 'package:youthx/modules/growth_center/widgets/overview_today_section.dart';
@@ -318,10 +319,10 @@ class _OverviewViewState extends State<OverviewView> {
             children: [
               Text(
                 isSchedule ? 'Schedule' : 'Overview',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1E1B2E),
+                  color: context.textPrimaryColor,
                 ),
               ),
               const SizedBox(height: 2),
@@ -363,7 +364,7 @@ class _OverviewViewState extends State<OverviewView> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(

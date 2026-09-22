@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/selectable_chip.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../data/models/post_model.dart';
@@ -21,7 +22,7 @@ class CommunityView extends GetView<CommunityController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bg,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: controller.loadFeed,
@@ -159,7 +160,7 @@ class _PostCardBound extends GetView<CommunityController> {
       onComment: () => Get.bottomSheet(
         CommentsView(post: post),
         isScrollControlled: true,
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.cardBg,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -249,7 +250,7 @@ class _PersonRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: AppColors.surface,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(18),
         elevation: 0,
         child: InkWell(
@@ -289,7 +290,7 @@ void _showWhiteSnackBar(BuildContext context, String message) {
     ..showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.white,
+        backgroundColor: context.cardBg,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -298,7 +299,9 @@ void _showWhiteSnackBar(BuildContext context, String message) {
             const Icon(Icons.check_circle, color: AppColors.primary, size: 18),
             const SizedBox(width: 10),
             Text(message,
-                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                style: TextStyle(
+                    color: context.textPrimaryColor,
+                    fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -367,7 +370,7 @@ class _IconButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: filled ? AppColors.primary : AppColors.surfaceAlt,
+          color: filled ? AppColors.primary : context.cardBgAlt,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Stack(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../data/models/feeling_model.dart';
 import '../../../../data/models/post_model.dart';
@@ -45,7 +46,7 @@ class _PostCardState extends State<PostCard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4)),
@@ -65,12 +66,12 @@ class _PostCardState extends State<PostCard> {
                     GestureDetector(
                       onTap: widget.onAuthorTap,
                       child: Text(post.author.name,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.textPrimaryColor)),
                     ),
                     Text(
                       '${timeago.format(post.createdAt)} • ${post.visibility}'
                       '${_feeling != null ? " • feeling ${_feeling!.display}" : ""}',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
                     ),
                   ],
                 ),
@@ -106,7 +107,7 @@ class _PostCardState extends State<PostCard> {
           ),
           if (post.caption.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Text(post.caption, style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.textPrimary)),
+            Text(post.caption, style: TextStyle(fontSize: 14, height: 1.4, color: context.textPrimaryColor)),
           ],
           if (post.tags.isNotEmpty) ...[
             const SizedBox(height: 10),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 import '../../modules/growth_center/models/task_model.dart';
 import '../../modules/growth_center/utils/task_priority_style.dart';
 import 'card_overflow_menu.dart';
@@ -28,7 +29,7 @@ class TaskCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -72,7 +73,7 @@ class TaskCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: task.isCompleted
                         ? Colors.grey.shade400
-                        : const Color(0xFF1E1B2E),
+                        : context.textPrimaryColor,
                     // strikethrough only when completed
                     decoration: task.isCompleted
                         ? TextDecoration.lineThrough
@@ -105,14 +106,14 @@ class TaskCard extends StatelessWidget {
                       Icon(
                         Icons.calendar_today,
                         size: 13,
-                        color: Colors.grey.shade500,
+                        color: context.textSecondaryColor,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         task.dueDate,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey.shade600,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                     ],

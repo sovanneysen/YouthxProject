@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 
 class OverviewStatCard extends StatelessWidget {
   final String emoji;
@@ -21,7 +22,7 @@ class OverviewStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -40,16 +41,16 @@ class OverviewStatCard extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1E1B2E),
+              color: context.textPrimaryColor,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             subtext,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../routes/app_routes.dart';
+import '../../core/theme/app_theme.dart';
 import '../controllers/auth_controller.dart';
 
 // ==================================================================
@@ -46,7 +47,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FC),
+      backgroundColor:
+          context.isDark ? context.bg : const Color(0xFFF6F8FC),
       // SingleChildScrollView is what makes the whole page scroll —
       // exactly like the tall screenshot you showed me.
       body: SafeArea(
@@ -92,9 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
               () => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Good morning 👋',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(
+                        fontSize: 12, color: context.textSecondaryColor),
                   ),
                   Text(
                     _auth.currentUser.value?.fullName ?? '…',
@@ -110,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         // Bell icon — InkWell so it has a native ripple, navigates to Notifications
         Material(
-          color: Colors.white,
+          color: context.cardBg,
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
@@ -238,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -290,7 +293,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         decoration: habit.done
                             ? TextDecoration.lineThrough
                             : null,
-                        color: habit.done ? Colors.grey : Colors.black87,
+                        color: habit.done
+                            ? context.textSecondaryColor
+                            : context.textPrimaryColor,
                       ),
                     ),
                   ],
@@ -364,7 +369,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -377,7 +382,8 @@ class _StatCard extends StatelessWidget {
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+            style: TextStyle(
+                fontSize: 10, color: context.textSecondaryColor),
           ),
         ],
       ),
@@ -408,7 +414,7 @@ class _CommunityPost extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -435,7 +441,8 @@ class _CommunityPost extends StatelessWidget {
               const Spacer(),
               Text(
                 time,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                style:
+                    TextStyle(fontSize: 11, color: context.textSecondaryColor),
               ),
             ],
           ),
