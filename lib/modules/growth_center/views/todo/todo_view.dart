@@ -193,6 +193,9 @@ class _FilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? Colors.blue : context.cardBg,
           borderRadius: BorderRadius.circular(20),
+          border: context.isDark && !selected
+              ? Border.all(color: context.borderColor)
+              : null,
         ),
         child: Text(
           label,

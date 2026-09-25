@@ -267,10 +267,10 @@ class _PersonRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(user.name,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.textPrimaryColor)),
                       const SizedBox(height: 2),
-                      const Text('Community member',
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text('Community member',
+                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor)),
                     ],
                   ),
                 ),
@@ -316,7 +316,7 @@ class _Header extends GetView<CommunityController> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -325,11 +325,11 @@ class _Header extends GetView<CommunityController> {
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.6,
-                        color: AppColors.textPrimary)),
-                SizedBox(height: 2),
+                        color: context.textPrimaryColor)),
+                const SizedBox(height: 2),
                 Text('2,840 members active today',
                     style: TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary)),
+                        fontSize: 12, color: context.textSecondaryColor)),
               ],
             ),
           ),
@@ -377,7 +377,7 @@ class _IconButton extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Icon(icon,
-                color: filled ? Colors.white : AppColors.textPrimary, size: 22),
+                color: filled ? Colors.white : context.textPrimaryColor, size: 22),
             if (badge != null)
               Positioned(
                 right: -4,
@@ -411,18 +411,20 @@ class _SearchBar extends GetView<CommunityController> {
       child: TextField(
         controller: controller.searchController,
         onChanged: controller.setSearch,
+        style: TextStyle(color: context.textPrimaryColor),
         decoration: InputDecoration(
           hintText: 'Search people...',
+          hintStyle: TextStyle(color: context.textSecondaryColor),
           prefixIcon:
-              const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+              Icon(Icons.search, color: context.textSecondaryColor, size: 20),
           suffixIcon: Obx(() => controller.isSearching
               ? IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.textMuted, size: 20),
+                  icon: Icon(Icons.close, color: context.textSecondaryColor, size: 20),
                   onPressed: controller.clearSearch,
                 )
               : const SizedBox.shrink()),
           filled: true,
-          fillColor: AppColors.inputFill,
+          fillColor: context.cardBgAlt,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none),

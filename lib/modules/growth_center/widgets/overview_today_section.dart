@@ -18,7 +18,7 @@ class OverviewTodaySection extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: Colors.grey.shade500,
+            color: context.textSecondaryColor,
             letterSpacing: 1,
           ),
         ),
@@ -29,6 +29,7 @@ class OverviewTodaySection extends StatelessWidget {
             decoration: BoxDecoration(
               color: context.cardBg,
               borderRadius: BorderRadius.circular(16),
+              border: context.isDark ? Border.all(color: context.borderColor) : null,
             ),
             child: Text(
               'Nothing due this day 🎉',
@@ -55,6 +56,7 @@ class _TodayItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
+        border: context.isDark ? Border.all(color: context.borderColor) : null,
       ),
       child: Row(
         children: [
@@ -65,7 +67,7 @@ class _TodayItem extends StatelessWidget {
               shape: BoxShape.circle,
               color: task.isCompleted
                   ? Colors.green.shade500
-                  : Colors.grey.shade200,
+                  : context.cardBgAlt,
             ),
             child: task.isCompleted
                 ? const Icon(Icons.check, size: 16, color: Colors.white)
@@ -81,7 +83,7 @@ class _TodayItem extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: task.isCompleted
-                        ? Colors.grey.shade400
+                        ? context.textSecondaryColor
                         : context.textPrimaryColor,
                     decoration: task.isCompleted
                         ? TextDecoration.lineThrough

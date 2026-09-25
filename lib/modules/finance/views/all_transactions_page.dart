@@ -1,110 +1,107 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
+import '../../../core/theme/app_theme.dart';
+import '../controllers/finance_controller.dart';
 
 class AllTransactionsPage extends StatelessWidget {
   const AllTransactionsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // * STEP 1: Dummy data — sample list បណ្តោះអាសន្ន
-    List<Map<String, dynamic>> transactions = [
-      {
-        'icon': '☕',
-        'title': 'Morning Coffee',
-        'subtitle': 'Food · Today',
-        'amount': '-\$4.50',
-        'isIncome': false,
-      },
-      {
-        'icon': '💳',
-        'title': 'Monthly Salary',
-        'subtitle': 'Income · Jun 1',
-        'amount': '+\$2800.00',
-        'isIncome': true,
-      },
-      {
-        'icon': '📚',
-        'title': 'University Books',
-        'subtitle': 'Education · Jun 2',
-        'amount': '-\$67.00',
-        'isIncome': false,
-      },
-      {
-        'icon': '🚌',
-        'title': 'Bus Pass',
-        'subtitle': 'Transport · Jun 2',
-        'amount': '-\$45.00',
-        'isIncome': false,
-      },
-      {
-        'icon': '🛒',
-        'title': 'Grocery Shopping',
-        'subtitle': 'Food · Jun 3',
-        'amount': '-\$89.20',
-        'isIncome': false,
-      },
-      {
-        'icon': '💻',
-        'title': 'Freelance Project',
-        'subtitle': 'Income · Jun 4',
-        'amount': '+\$350.00',
-        'isIncome': true,
-      },
-    ];
+    final controller = Get.find<FinanceController>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F3FF),
-      // Todo: AppBar
+      backgroundColor: context.bg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF0F3FF),
+        backgroundColor: context.bg,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'All Transactions',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: context.textPrimaryColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: context.textPrimaryColor),
       ),
+      body: Obx(() {
+        final txs = controller.transactions;
 
-      // Todo: Body: List
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: transactions.length,
-        itemBuilder: (context, index) {
-          Map<String, dynamic> tx = transactions[index];
+        if (controller.loading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.grey[100],
-                child: Text(tx['icon']),
-              ),
-              title: Text(
-                tx['title'],
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                tx['subtitle'],
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              trailing: Text(
-                tx['amount'],
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: tx['isIncome'] ? Colors.green : Colors.black87,
-                ),
-              ),
-              onTap: () {
-                // TODO: បើក Add/Edit screen ជា pre-filled mode (ពេលមាន logic)
-                // * Navigator.push(context, MaterialPageRoute(builder: (context) => AddTransactionPage(existingTx: tx)));
-              },
+        if (txs.isEmpty) {
+          return Center(
+            child: Text(
+              'No transactions yet',
+              style: TextStyle(color: context.textSecondaryColor),
             ),
           );
-        },
-      ),
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: txs.length,
+          itemBuilder: (context, index) {
+            final tx = txs[index];
+            final category = controller.resolveCategory(tx);
+            final isIncome = tx.type.toLowerCase() == 'income';
+            final sign = isIncome ? '+' : '-';
+            final amountStr =
+                '$sign\$${NumberFormat('#,##0.00').format(tx.amount.abs())}';
+            final dateStr =
+                '${tx.date.day}/${tx.date.month}/${tx.date.year}';
+            final subtitle = '${category.name} · $dateStr';
+            final title =
+                tx.note?.isNotEmpty == true ? tx.note! : category.name;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: context.cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: context.isDark
+                    ? Border.all(color: context.borderColor)
+                    : null,
+              ),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: context.cardBgAlt,
+                  child: Text(category.icon),
+                ),
+                title: Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimaryColor,
+                  ),
+                ),
+                subtitle: Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textSecondaryColor,
+                  ),
+                ),
+                trailing: Text(
+                  amountStr,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isIncome ? Colors.green : context.textPrimaryColor,
+                  ),
+                ),
+                onTap: () {
+                  // TODO: open pre-filled edit screen when edit flow is ready
+                },
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }
+

@@ -186,8 +186,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               const SizedBox(height: 20),
                               _buildStatsCard(),
                               const SizedBox(height: 16),
-                              _buildAchievementsCard(),
-                              const SizedBox(height: 16),
                               _buildTabs(),
                               const SizedBox(height: 12),
                               _buildPostsList(),
@@ -484,65 +482,6 @@ Widget _statDivider() =>
                   TextStyle(fontSize: 13, color: context.textSecondaryColor)),
         ],
       ),
-    );
-  }
- 
-  // ---------------- ACHIEVEMENTS ----------------
- 
-  Widget _buildAchievementsCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(20),
-      decoration: _cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Achievements',
-            style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: context.textPrimaryColor),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _achievementItem(Icons.local_fire_department, '7-Day Streak',
-                  const Color(0xFFFFF1DE), const Color(0xFFE08A3E)),
-              _achievementItem(Icons.track_changes, 'Goal Crusher',
-                  const Color(0xFFFCE4E4), const Color(0xFFD9534F)),
-              _achievementItem(Icons.savings, 'Budget Pro',
-                  const Color(0xFFE3F2E1), const Color(0xFF2E9E5B)),
-              _achievementItem(Icons.star, 'Top Poster',
-                  const Color(0xFFF4E8FE), const Color(0xFF9B59B6)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
- 
-  Widget _achievementItem(IconData icon, String label, Color bg, Color fg) {
-    return Column(
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-          alignment: Alignment.center,
-          child: Icon(icon, color: fg, size: 22),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: 68,
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: context.textSecondaryColor),
-          ),
-        ),
-      ],
     );
   }
  

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class TipBanner extends StatelessWidget {
   final String text;
@@ -9,14 +10,18 @@ class TipBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF3FF),
+        color: context.isDark
+            ? const Color(0xFF4F46E5).withValues(alpha: 0.15)
+            : const Color(0xFFEFF3FF),
         borderRadius: BorderRadius.circular(14),
       ),
       child: RichText(
         text: TextSpan(
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13.5,
-            color: Color(0xFF3B4A6B),
+            color: context.isDark
+                ? const Color(0xFFC7D2FE)
+                : const Color(0xFF3B4A6B),
             height: 1.4,
           ),
           children: [
@@ -32,3 +37,4 @@ class TipBanner extends StatelessWidget {
     );
   }
 }
+

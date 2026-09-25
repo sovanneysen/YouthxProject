@@ -31,6 +31,9 @@ class TaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.cardBg,
         borderRadius: BorderRadius.circular(18),
+        border: context.isDark
+            ? Border.all(color: context.borderColor)
+            : null,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +54,7 @@ class TaskCard extends StatelessWidget {
                 border: Border.all(
                   color: task.isCompleted
                       ? Colors.green.shade500
-                      : Colors.grey.shade400,
+                      : context.borderColor,
                   width: 2,
                 ),
               ),
@@ -72,7 +75,7 @@ class TaskCard extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: task.isCompleted
-                        ? Colors.grey.shade400
+                        ? context.textSecondaryColor
                         : context.textPrimaryColor,
                     // strikethrough only when completed
                     decoration: task.isCompleted

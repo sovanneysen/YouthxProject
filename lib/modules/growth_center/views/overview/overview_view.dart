@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:youthx/core/theme/app_theme.dart';
-import 'package:youthx/modules/growth_center/widgets/overview_calendar_card.dart';
-import 'package:youthx/modules/growth_center/widgets/overview_nav_arrow.dart';
-import 'package:youthx/modules/growth_center/widgets/overview_today_section.dart';
+import '../../widgets/overview_calendar_card.dart';
+import '../../widgets/overview_nav_arrow.dart';
+import '../../widgets/overview_today_section.dart';
 import '../../models/goal_model.dart';
 import '../../models/habit_model.dart';
 import '../../models/task_model.dart';
@@ -212,7 +212,11 @@ class _OverviewViewState extends State<OverviewView> {
             ),
             Text(
               '${_monthNames[_selectedDay.month - 1]} ${_selectedDay.year}',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: context.textPrimaryColor,
+              ),
             ),
             OverviewNavArrow(icon: Icons.chevron_right, onTap: _goToNextWeek),
           ],
@@ -243,14 +247,14 @@ class _OverviewViewState extends State<OverviewView> {
                 width: 48,
                 child: Text(
                   '${hour.toString().padLeft(2, '0')}:00',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
                 ),
               ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Divider(color: Colors.grey.shade300, height: 1),
+                    Divider(color: context.borderColor, height: 1),
                     if (events.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       ...events,
@@ -330,15 +334,16 @@ class _OverviewViewState extends State<OverviewView> {
                 isSchedule
                     ? '${_monthNames[_selectedDay.month - 1]} ${_selectedDay.year}'
                     : 'Your progress at a glance 📊',
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 14, color: context.textSecondaryColor),
               ),
             ],
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade200,
+            color: context.cardBgAlt,
             borderRadius: BorderRadius.circular(20),
+            border: context.isDark ? Border.all(color: context.borderColor) : null,
           ),
           padding: const EdgeInsets.all(4),
           child: Row(
@@ -366,6 +371,7 @@ class _OverviewViewState extends State<OverviewView> {
       decoration: BoxDecoration(
         color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
+        border: context.isDark ? Border.all(color: context.borderColor) : null,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -376,14 +382,18 @@ class _OverviewViewState extends State<OverviewView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Overall Progress',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: context.textPrimaryColor,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Across all 3 categories',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
                 ),
                 const SizedBox(height: 12),
                 OverviewMiniProgressRow(

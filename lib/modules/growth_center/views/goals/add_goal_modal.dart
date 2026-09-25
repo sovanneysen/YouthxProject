@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 import '../../models/goal_model.dart';
 import '../../utils/category_style.dart';
 import '../../widgets/modal_header.dart';
@@ -11,7 +12,7 @@ import '../../widgets/primary_button.dart';
 class AddGoalModal extends StatefulWidget {
   final ValueChanged<GoalModel> onSave;
   final GoalModel? existingGoal; // null = add mode, non-null = edit mode
-  AddGoalModal({super.key, required this.onSave, this.existingGoal});
+  const AddGoalModal({super.key, required this.onSave, this.existingGoal});
 
   @override
   State<AddGoalModal> createState() => _AddGoalModalState();
@@ -143,9 +144,9 @@ class _AddGoalModalState extends State<AddGoalModal> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: context.cardBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             children: [
@@ -153,7 +154,7 @@ class _AddGoalModalState extends State<AddGoalModal> {
                 title: _isEditing ? 'Edit Goal' : 'Add New Goal',
                 onClose: () => Navigator.of(context).pop(),
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: context.borderColor),
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
@@ -174,7 +175,7 @@ class _AddGoalModalState extends State<AddGoalModal> {
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.6,
-                          color: Colors.grey.shade600,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                       const SizedBox(height: 10),

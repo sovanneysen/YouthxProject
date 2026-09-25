@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class SelectableGridItem<T> {
   final T value;
@@ -45,12 +46,16 @@ class SelectableGrid<T> extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFEFF3FF) : Colors.white,
+              color: isSelected
+                  ? (context.isDark
+                      ? const Color(0xFF4F46E5).withValues(alpha: 0.25)
+                      : const Color(0xFFEFF3FF))
+                  : context.cardBg,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected
                     ? const Color(0xFF4F46E5)
-                    : const Color(0xFFE5E7EB),
+                    : context.borderColor,
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -68,7 +73,7 @@ class SelectableGrid<T> extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: isSelected
                           ? const Color(0xFF4F46E5)
-                          : const Color(0xFF374151),
+                          : context.textPrimaryColor,
                     ),
                   ),
                 ],
@@ -80,3 +85,4 @@ class SelectableGrid<T> extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class SegmentedOption<T> {
   final T value;
@@ -35,10 +36,10 @@ class SegmentedToggle<T> extends StatelessWidget {
                 height: 52,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isActive ? activeColor : Colors.white,
+                  color: isActive ? activeColor : context.cardBg,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isActive ? activeColor : const Color(0xFFE5E7EB),
+                    color: isActive ? activeColor : context.borderColor,
                     width: 1.5,
                   ),
                 ),
@@ -47,7 +48,7 @@ class SegmentedToggle<T> extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: isActive ? Colors.white : const Color(0xFF374151),
+                    color: isActive ? Colors.white : context.textPrimaryColor,
                   ),
                 ),
               ),
@@ -58,3 +59,4 @@ class SegmentedToggle<T> extends StatelessWidget {
     );
   }
 }
+

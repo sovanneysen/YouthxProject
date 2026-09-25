@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class ColorPickerRow extends StatelessWidget {
   final List<Color> colors;
@@ -29,7 +30,10 @@ class ColorPickerRow extends StatelessWidget {
               color: color,
               shape: BoxShape.circle,
               border: isSelected
-                  ? Border.all(color: Colors.black87, width: 2.5)
+                  ? Border.all(
+                      color: context.isDark ? Colors.white : Colors.black87,
+                      width: 2.5,
+                    )
                   : null,
               boxShadow: isSelected
                   ? [
@@ -50,3 +54,4 @@ class ColorPickerRow extends StatelessWidget {
     );
   }
 }
+

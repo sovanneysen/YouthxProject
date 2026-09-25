@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 
 class OverviewCalendarCard extends StatelessWidget {
   final DateTime displayedMonth; // which month is currently shown
@@ -57,8 +58,9 @@ class OverviewCalendarCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
+        border: context.isDark ? Border.all(color: context.borderColor) : null,
       ),
       child: Column(
         children: [
@@ -69,9 +71,10 @@ class OverviewCalendarCard extends StatelessWidget {
               _NavArrow(icon: Icons.chevron_left, onTap: onPreviousMonth),
               Text(
                 '${_monthNames[displayedMonth.month - 1]} ${displayedMonth.year}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
+                  color: context.textPrimaryColor,
                 ),
               ),
               _NavArrow(icon: Icons.chevron_right, onTap: onNextMonth),
@@ -89,7 +92,7 @@ class OverviewCalendarCard extends StatelessWidget {
                         label,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                     ),
@@ -102,9 +105,9 @@ class OverviewCalendarCard extends StatelessWidget {
           // --- Day grid ---
           // firstWeekday - 1 = how many empty cells before day 1
           // (e.g. if the 1st is a Thursday, weekday = 4, so 3 blanks before it)
-          _buildDayGrid(daysInMonth, firstWeekday),
+          _buildDayGrid(context, daysInMonth, firstWeekday),
 
-          const Divider(height: 24),
+          Divider(height: 24, color: context.borderColor),
 
           // --- Legend ---
           Row(
@@ -119,7 +122,7 @@ class OverviewCalendarCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDayGrid(int daysInMonth, int firstWeekday) {
+  Widget _buildDayGrid(BuildContext context, int daysInMonth, int firstWeekday) {
     // Build one flat list: blanks first, then day numbers 1..daysInMonth
     final cells = <Widget>[];
 
@@ -154,7 +157,7 @@ class OverviewCalendarCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF1E1B2E),
+                          : context.textPrimaryColor,
                     ),
                   ),
                 ),
@@ -215,9 +218,9 @@ class _NavArrow extends StatelessWidget {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.grey.shade100,
+          color: context.cardBgAlt,
         ),
-        child: Icon(icon, size: 20, color: Colors.grey.shade700),
+        child: Icon(icon, size: 20, color: context.textSecondaryColor),
       ),
     );
   }
@@ -241,7 +244,7 @@ class _LegendDot extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
         ),
       ],
     );

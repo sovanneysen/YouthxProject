@@ -2,11 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:youthx/modules/community/controllers/community_controller.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../community/controllers/community_controller.dart';
 import '../controllers/story_editor_controller.dart';
 import '../binding/story_binding.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../data/models/story_model.dart';
 
 class StoryEditorView extends StatefulWidget {
@@ -35,7 +36,7 @@ class _StoryEditorViewState extends State<StoryEditorView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bg,
       body: SafeArea(
         child: Obx(() {
           if (c.imagePath.value == null && c.backgroundColorHex.value == null) {
@@ -64,16 +65,18 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
-          _CircleButton(
-            icon: Icons.close,
-            onTap: () => Get.back(),
-          ),
+          _CircleButton(icon: Icons.close, onTap: () => Get.back()),
           const SizedBox(width: 12),
-          Obx(() => Text(c.isEditing ? 'Edit Story' : 'New Story',
-              style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary))),
+          Obx(
+            () => Text(
+              c.isEditing ? 'Edit Story' : 'New Story',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: context.textPrimaryColor,
+              ),
+            ),
+          ),
           const Spacer(),
           Obx(() {
             final selected = c.selectedOverlay.value;
@@ -81,20 +84,23 @@ class _TopBar extends StatelessWidget {
               if (!c.isEditing) return const SizedBox.shrink();
               return IconButton(
                 onPressed: () => _confirmDeleteStory(context),
-                icon: const Icon(Icons.delete_outline,
-                    color: AppColors.danger, size: 22),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.danger,
+                  size: 22,
+                ),
               );
             }
             return IconButton(
               onPressed: () => c.removeOverlay(selected.id),
-              icon: const Icon(Icons.delete_outline,
-                  color: AppColors.danger, size: 22),
+              icon: const Icon(
+                Icons.delete_outline,
+                color: AppColors.danger,
+                size: 22,
+              ),
             );
           }),
-          _CircleButton(
-            icon: Icons.text_fields,
-            onTap: c.addText,
-          ),
+          _CircleButton(icon: Icons.text_fields, onTap: c.addText),
         ],
       ),
     );
@@ -107,7 +113,8 @@ class _TopBar extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Delete story?'),
         content: const Text(
-            'This story will be removed from your profile and the community feed.'),
+          'This story will be removed from your profile and the community feed.',
+        ),
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           TextButton(
@@ -116,8 +123,10 @@ class _TopBar extends StatelessWidget {
               Get.back();
               if (ok) Get.back(result: true);
             },
-            child:
-                const Text('Delete', style: TextStyle(color: AppColors.danger)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.danger),
+            ),
           ),
         ],
       ),
@@ -133,7 +142,7 @@ class _CircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
+      color: context.cardBg,
       shape: const CircleBorder(),
       elevation: 1,
       child: InkWell(
@@ -141,7 +150,7 @@ class _CircleButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         child: Padding(
           padding: const EdgeInsets.all(10),
-          child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          child: Icon(icon, size: 20, color: context.textPrimaryColor),
         ),
       ),
     );
@@ -159,50 +168,62 @@ class _EditorCanvas extends StatelessWidget {
       child: Center(
         child: AspectRatio(
           aspectRatio: 9 / 16,
-          child: LayoutBuilder(builder: (context, constraints) {
-            final canvasSize =
-                Size(constraints.maxWidth, constraints.maxHeight);
-            final bg = c.backgroundColorHex.value;
-            return Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final canvasSize = Size(
+                constraints.maxWidth,
+                constraints.maxHeight,
+              );
+              final bg = c.backgroundColorHex.value;
+              return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
                       color: Colors.black.withValues(alpha: 0.10),
                       blurRadius: 24,
-                      offset: const Offset(0, 10)),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    GestureDetector(
-                      onTap: () => c.selectOverlay(null),
-                      child: ColoredBox(
-                        color: bg != null ? colorFromHex(bg) : Colors.black,
-                        child: c.imagePath.value != null
-                            ? Image.file(File(c.imagePath.value!),
-                                fit: BoxFit.cover)
-                            : null,
-                      ),
+                      offset: const Offset(0, 10),
                     ),
-                    // Draggable text overlays - Instagram style, move anywhere
-                    // on the canvas using fractional positions.
-                    Obx(() => Stack(
-                          children: c.overlays
-                              .map((overlay) => _DraggableText(
-                                  overlay: overlay,
-                                  canvasSize: canvasSize,
-                                  c: c))
-                              .toList(),
-                        )),
                   ],
                 ),
-              ),
-            );
-          }),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      GestureDetector(
+                        onTap: () => c.selectOverlay(null),
+                        child: ColoredBox(
+                          color: bg != null ? colorFromHex(bg) : Colors.black,
+                          child: c.imagePath.value != null
+                              ? Image.file(
+                                  File(c.imagePath.value!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                      ),
+                      // Draggable text overlays - Instagram style, move anywhere
+                      // on the canvas using fractional positions.
+                      Obx(
+                        () => Stack(
+                          children: c.overlays
+                              .map(
+                                (overlay) => _DraggableText(
+                                  overlay: overlay,
+                                  canvasSize: canvasSize,
+                                  c: c,
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -214,8 +235,11 @@ class _DraggableText extends StatelessWidget {
   final Size canvasSize;
   final StoryEditorController c;
 
-  const _DraggableText(
-      {required this.overlay, required this.canvasSize, required this.c});
+  const _DraggableText({
+    required this.overlay,
+    required this.canvasSize,
+    required this.c,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -265,19 +289,24 @@ class _DraggableText extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: context.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content:
-            TextField(controller: controller, autofocus: true, maxLines: 2),
+        content: TextField(
+          controller: controller,
+          style: TextStyle(color: context.textPrimaryColor),
+          autofocus: true,
+          maxLines: 2,
+        ),
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               c.updateOverlayText(
-                  overlay.id,
-                  controller.text.trim().isEmpty
-                      ? overlay.text
-                      : controller.text.trim());
+                overlay.id,
+                controller.text.trim().isEmpty
+                    ? overlay.text
+                    : controller.text.trim(),
+              );
               Get.back();
             },
             child: const Text('Done'),
@@ -305,11 +334,14 @@ class _BottomPanel extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Background',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary)),
+                Text(
+                  'Background',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: context.textSecondaryColor,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -328,11 +360,14 @@ class _BottomPanel extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Text color',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary)),
+                Text(
+                  'Text color',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: context.textSecondaryColor,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -352,7 +387,7 @@ class _BottomPanel extends StatelessWidget {
                               border: Border.all(
                                 color: active
                                     ? AppColors.primary
-                                    : AppColors.border,
+                                    : context.borderColor,
                                 width: active ? 3 : 1,
                               ),
                             ),
@@ -366,14 +401,14 @@ class _BottomPanel extends StatelessWidget {
             );
           }),
           const SizedBox(height: 18),
-          Obx(() => Opacity(
-                opacity: c.canPost ? 1 : 0.45,
-                child: Row(
-                  children: [
-                    Expanded(child: _ShareButton(c: c)),
-                  ],
-                ),
-              )),
+          Obx(
+            () => Opacity(
+              opacity: c.canPost ? 1 : 0.45,
+              child: Row(
+                children: [Expanded(child: _ShareButton(c: c))],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -397,15 +432,17 @@ class _ShareButton extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-                colors: shared
-                    ? [AppColors.accentGreen, AppColors.accentGreen]
-                    : [AppColors.primary, AppColors.accentPurple]),
+              colors: shared
+                  ? [AppColors.accentGreen, AppColors.accentGreen]
+                  : [AppColors.primary, AppColors.accentPurple],
+            ),
             borderRadius: BorderRadius.circular(26),
             boxShadow: [
               BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.30),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6)),
+                color: AppColors.primary.withValues(alpha: 0.30),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
             ],
           ),
           child: Material(
@@ -430,20 +467,29 @@ class _ShareButton extends StatelessWidget {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
                     : Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (shared) ...[
-                            const Icon(Icons.check_circle,
-                                color: Colors.white, size: 18),
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                             const SizedBox(width: 6),
                           ],
-                          Text(label,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14)),
+                          Text(
+                            label,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
                         ],
                       ),
               ),
@@ -482,7 +528,7 @@ class _BackgroundSwatches extends StatelessWidget {
                 color: color,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: selected ? AppColors.primary : AppColors.border,
+                  color: selected ? AppColors.primary : context.borderColor,
                   width: selected ? 3 : 1,
                 ),
               ),
@@ -516,44 +562,58 @@ class _EmptyPicker extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.accentPurple]),
+              colors: [AppColors.primary, AppColors.accentPurple],
+            ),
             boxShadow: [
               BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.35),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10))
+                color: AppColors.primary.withValues(alpha: 0.35),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
             ],
           ),
-          child: const Icon(Icons.add_photo_alternate_outlined,
-              color: Colors.white, size: 40),
+          child: const Icon(
+            Icons.add_photo_alternate_outlined,
+            color: Colors.white,
+            size: 40,
+          ),
         ),
         const SizedBox(height: 20),
-        const Text('Create a story',
-            style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary)),
+        Text(
+          'Create a story',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: context.textPrimaryColor,
+          ),
+        ),
         const SizedBox(height: 6),
-        const Text('Share a moment with the community',
-            style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+        Text(
+          'Share a moment with the community',
+          style: TextStyle(fontSize: 14, color: context.textSecondaryColor),
+        ),
         const SizedBox(height: 28),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _PickCard(
-                icon: Icons.photo_library_outlined,
-                label: 'Gallery',
-                onTap: () => c.pickImage(ImageSource.gallery)),
+              icon: Icons.photo_library_outlined,
+              label: 'Gallery',
+              onTap: () => c.pickImage(ImageSource.gallery),
+            ),
             const SizedBox(width: 16),
             _PickCard(
-                icon: Icons.camera_alt_outlined,
-                label: 'Camera',
-                onTap: () => c.pickImage(ImageSource.camera)),
+              icon: Icons.camera_alt_outlined,
+              label: 'Camera',
+              onTap: () => c.pickImage(ImageSource.camera),
+            ),
           ],
         ),
         const SizedBox(height: 28),
-        const Text('or pick a solid background',
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+        Text(
+          'or pick a solid background',
+          style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
+        ),
         const SizedBox(height: 12),
         _BackgroundSwatches(
           selectedHex: c.backgroundColorHex.value,
@@ -569,8 +629,11 @@ class _PickCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _PickCard(
-      {required this.icon, required this.label, required this.onTap});
+  const _PickCard({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -580,13 +643,14 @@ class _PickCard extends StatelessWidget {
         width: 120,
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 14,
-                offset: const Offset(0, 6))
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
         child: Column(
@@ -601,11 +665,14 @@ class _PickCard extends StatelessWidget {
               child: Icon(icon, color: AppColors.primary, size: 26),
             ),
             const SizedBox(height: 12),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: context.textPrimaryColor,
+              ),
+            ),
           ],
         ),
       ),

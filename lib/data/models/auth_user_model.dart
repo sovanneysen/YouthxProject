@@ -12,7 +12,6 @@ class AuthUserModel {
   final String id;
   final String email;
   final String fullName;
-  final int xpPoints;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -20,7 +19,6 @@ class AuthUserModel {
     required this.id,
     required this.email,
     required this.fullName,
-    required this.xpPoints,
     this.createdAt,
     this.updatedAt,
   });
@@ -29,7 +27,6 @@ class AuthUserModel {
     id: json['id'] as String,
     email: json['email'] as String,
     fullName: json['fullName'] as String,
-    xpPoints: json['xpPoints'] as int? ?? 0,
     createdAt: _parseDate(json['createdAt']),
     updatedAt: _parseDate(json['updatedAt']),
   );

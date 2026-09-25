@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class ModalHeader extends StatelessWidget {
   final String title;
@@ -13,7 +14,7 @@ class ModalHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1E1B2E))),
+          Text(title, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.textPrimaryColor)),
           SizedBox(
             width: 44,
             height: 44,
@@ -22,8 +23,8 @@ class ModalHeader extends StatelessWidget {
               icon: Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(color: Color(0xFFF1F2F6), shape: BoxShape.circle),
-                child: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF4B5563)),
+                decoration: BoxDecoration(color: context.cardBgAlt, shape: BoxShape.circle),
+                child: Icon(Icons.close_rounded, size: 18, color: context.textPrimaryColor),
               ),
             ),
           ),
@@ -32,3 +33,4 @@ class ModalHeader extends StatelessWidget {
     );
   }
 }
+

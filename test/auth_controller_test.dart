@@ -39,7 +39,6 @@ class FakeAuthRepository extends AuthRepository {
     id: 'u1',
     email: 'alex@university.edu',
     fullName: 'Alex Johnson',
-    xpPoints: 0,
   );
 }
 

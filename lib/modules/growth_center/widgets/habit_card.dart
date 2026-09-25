@@ -25,13 +25,16 @@ class HabitCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: context.isDark ? Border.all(color: context.borderColor) : null,
+        boxShadow: context.isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Row(
         children: [

@@ -58,6 +58,12 @@ class FinanceController extends GetxController {
 
       expenseCategories.assignAll(cats.where((c) => !c.isIncome).toList());
       incomeCategories.assignAll(cats.where((c) => c.isIncome).toList());
+      // "Other" lives in expense_categories with isIncome=false (DB UNIQUE
+      // constraint prevents two rows named "Other"). Inject the same row into
+      // incomeCategories so both grids show it. resolveCategory() matches by
+      // category.id, so income "Other" transactions resolve correctly.
+      final otherCat = cats.firstWhereOrNull((c) => c.name == 'Other');
+      if (otherCat != null) incomeCategories.add(otherCat);
       transactions.assignAll(txs);
       savingGoals.assignAll(goals);
       // small delay keeps the spinner visible on fast networks
@@ -74,20 +80,21 @@ class FinanceController extends GetxController {
   double get totalBalance {
     var balance = 0.0;
     for (final t in transactions) {
-      balance += t.type == 'income' ? t.amount.abs() : -t.amount.abs();
+      balance += t.type.toLowerCase() == 'income' ? t.amount.abs() : -t.amount.abs();
     }
     return balance;
   }
 
   double get totalIncome => transactions
-      .where((t) => t.type == 'income')
+      .where((t) => t.type.toLowerCase() == 'income')
       .fold(0.0, (sum, t) => sum + t.amount.abs());
 
   double get totalExpense => transactions
-      .where((t) => t.type != 'income')
+      .where((t) => t.type.toLowerCase() != 'income')
       .fold(0.0, (sum, t) => sum + t.amount.abs());
 
-  List<TransactionModel> get recentTransactions => transactions.take(4).toList();
+  List<TransactionModel> get recentTransactions =>
+      transactions.take(4).toList();
 
   // * Map category amount negative for display helper
   String _formatAmount(TransactionModel t) {
@@ -97,11 +104,19 @@ class FinanceController extends GetxController {
 
   // * Map a backend category onto the first emoji-owning category in the
   // * filtered list (income vs expense) so tiles keep a stable icon.
-  TransactionCategory _resolveCategory(TransactionModel t) {
-    final pool = t.type == 'income' ? incomeCategories : expenseCategories;
+  TransactionCategory resolveCategory(TransactionModel t) {
+    final isIncome = t.type.toLowerCase() == 'income';
+    final pool = isIncome ? incomeCategories : expenseCategories;
     for (final c in pool) {
       if (c.id == t.category.id) return c;
     }
+    
+    // Fallback: search the other pool in case of data mismatch (e.g. old mock IDs)
+    final otherPool = isIncome ? expenseCategories : incomeCategories;
+    for (final c in otherPool) {
+      if (c.id == t.category.id) return c;
+    }
+    
     return t.category;
   }
 
@@ -157,8 +172,7 @@ class FinanceController extends GetxController {
 
   Future<bool> depositToSavingGoal(SavingGoalModel goal, double amount) async {
     try {
-      final updated =
-          await repository.depositToSavingGoal(goal, amount);
+      final updated = await repository.depositToSavingGoal(goal, amount);
       final index = savingGoals.indexWhere((g) => g.id == updated.id);
       if (index != -1) savingGoals[index] = updated;
       return true;

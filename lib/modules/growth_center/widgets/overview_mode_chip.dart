@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 
 class OverviewModeChip extends StatelessWidget {
   final String label;
@@ -27,7 +28,7 @@ class OverviewModeChip extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
-            color: selected ? Colors.white : Colors.grey.shade700,
+            color: selected ? Colors.white : context.textSecondaryColor,
           ),
         ),
       ),

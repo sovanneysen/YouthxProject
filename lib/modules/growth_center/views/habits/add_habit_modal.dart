@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:youthx/modules/growth_center/widgets/labeled_text_field.dart';
-import 'package:youthx/modules/growth_center/widgets/modal_header.dart';
-import 'package:youthx/modules/growth_center/widgets/primary_button.dart';
-import 'package:youthx/modules/growth_center/widgets/selectable_grid.dart';
+import 'package:youthx/core/theme/app_theme.dart';
+import '../../widgets/labeled_text_field.dart';
+import '../../widgets/modal_header.dart';
+import '../../widgets/primary_button.dart';
+import '../../widgets/selectable_grid.dart';
 import '../../../../core/widgets/segmented_toggle.dart';
 import '../../../../core/widgets/color_picker_row.dart';
 import '../../models/habit_model.dart';
@@ -101,9 +102,9 @@ class _AddHabitModalState extends State<AddHabitModal> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: context.cardBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             children: [
@@ -111,7 +112,7 @@ class _AddHabitModalState extends State<AddHabitModal> {
                 title: _isEditing ? 'Edit Habit' : 'Add New Habit',
                 onClose: () => Navigator.of(context).pop(),
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: context.borderColor),
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
@@ -132,7 +133,7 @@ class _AddHabitModalState extends State<AddHabitModal> {
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.6,
-                          color: Colors.grey.shade600,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -149,7 +150,7 @@ class _AddHabitModalState extends State<AddHabitModal> {
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.6,
-                          color: Colors.grey.shade600,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -174,7 +175,7 @@ class _AddHabitModalState extends State<AddHabitModal> {
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.6,
-                          color: Colors.grey.shade600,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                       const SizedBox(height: 10),

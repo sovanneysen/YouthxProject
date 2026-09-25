@@ -7,28 +7,28 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: buildSimpleAppBar('Settings'),
+      backgroundColor: context.bg,
+      appBar: buildSimpleAppBar(context, 'Settings'),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Container(
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: Column(
               children: [
                 _tile(context, Icons.language, 'Language', 'English'),
-                _divider(),
+                _divider(context),
                 _tile(context, Icons.attach_money, 'Currency', 'GBP (£)'),
-                _divider(),
+                _divider(context),
                 _tile(context, Icons.lock_outline, 'Account security', ''),
-                _divider(),
+                _divider(context),
                 _tile(context, Icons.storage_outlined, 'Storage and data', ''),
               ],
             ),
           ),
           const SizedBox(height: 16),
           Container(
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: _tile(context, Icons.info_outline, 'About', 'v1.0.0'),
           ),
         ],
@@ -40,14 +40,14 @@ class SettingsScreen extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       leading: Icon(icon, color: AppColors.primaryPurple),
-      title: Text(title, style: const TextStyle(fontSize: 13.5)),
+      title: Text(title, style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (value.isNotEmpty)
-            Text(value, style: TextStyle(fontSize: 12.5, color: Colors.grey.shade500)),
+            Text(value, style: TextStyle(fontSize: 12.5, color: context.textSecondaryColor)),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, color: Colors.grey),
+          Icon(Icons.chevron_right, color: context.textSecondaryColor),
         ],
       ),
       onTap: () {
@@ -56,5 +56,5 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _divider() => Divider(height: 1, color: Colors.grey.shade200, indent: 14, endIndent: 14);
+  Widget _divider(BuildContext context) => Divider(height: 1, color: context.borderColor, indent: 14, endIndent: 14);
 }

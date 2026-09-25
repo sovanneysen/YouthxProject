@@ -35,8 +35,8 @@ class _FollowersScreenState extends State<FollowersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: buildSimpleAppBar('Followers (${_followers.length})'),
+      backgroundColor: context.bg,
+      appBar: buildSimpleAppBar(context, 'Followers (${_followers.length})'),
       body: ListView.separated(
         padding: const EdgeInsets.all(20),
         itemCount: _followers.length,
@@ -45,12 +45,14 @@ class _FollowersScreenState extends State<FollowersScreen> {
           final user = _followers[index];
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: const Color(0xFFE6E9FE),
+                  backgroundColor: context.isDark
+                      ? AppColors.primaryPurple.withOpacity(0.18)
+                      : const Color(0xFFE6E9FE),
                   child: Text(user.initials,
                       style: const TextStyle(
                           color: AppColors.primaryPurple, fontWeight: FontWeight.w600)),
@@ -61,18 +63,25 @@ class _FollowersScreenState extends State<FollowersScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(user.name,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimaryColor)),
                       Text(user.subtitle,
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          style: TextStyle(fontSize: 12, color: context.textSecondaryColor)),
                     ],
                   ),
                 ),
                 OutlinedButton(
                   onPressed: () => setState(() => user.isFollowingBack = !user.isFollowingBack),
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: user.isFollowingBack ? Colors.grey.shade100 : AppColors.primaryPurple,
-                    foregroundColor: user.isFollowingBack ? Colors.grey.shade700 : Colors.white,
-                    side: BorderSide(color: user.isFollowingBack ? Colors.grey.shade300 : Colors.transparent),
+                    backgroundColor: user.isFollowingBack
+                        ? (context.isDark ? context.cardBgAlt : Colors.grey.shade100)
+                        : AppColors.primaryPurple,
+                    foregroundColor: user.isFollowingBack
+                        ? (context.isDark ? context.textPrimaryColor : Colors.grey.shade700)
+                        : Colors.white,
+                    side: BorderSide(
+                        color: user.isFollowingBack
+                            ? (context.isDark ? context.borderColor : Colors.grey.shade300)
+                            : Colors.transparent),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                   ),
                   child: Text(user.isFollowingBack ? 'Following' : 'Follow',

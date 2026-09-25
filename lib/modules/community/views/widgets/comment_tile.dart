@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../data/models/post_model.dart';
 
@@ -37,15 +38,15 @@ class CommentTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceAlt,
+                    color: context.cardBgAlt,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(comment.author.name, style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w700)),
+                      Text(comment.author.name, style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w700, color: context.textPrimaryColor)),
                       const SizedBox(height: 2),
-                      Text(comment.text, style: AppTextStyles.body),
+                      Text(comment.text, style: AppTextStyles.body.copyWith(color: context.textPrimaryColor)),
                     ],
                   ),
                 ),
@@ -53,14 +54,14 @@ class CommentTile extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 12, top: 4),
                   child: Row(
                     children: [
-                      Text(timeago.format(comment.createdAt, locale: 'en_short'), style: AppTextStyles.small),
+                      Text(timeago.format(comment.createdAt, locale: 'en_short'), style: AppTextStyles.small.copyWith(color: context.textSecondaryColor)),
                       if (onReply != null) ...[
                         const SizedBox(width: 14),
                         InkWell(
                           onTap: onReply,
                           child: Text(
                             'Reply',
-                            style: AppTextStyles.small.copyWith(fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                            style: AppTextStyles.small.copyWith(fontWeight: FontWeight.w700, color: context.textSecondaryColor),
                           ),
                         ),
                       ],
@@ -83,3 +84,4 @@ class CommentTile extends StatelessWidget {
     );
   }
 }
+

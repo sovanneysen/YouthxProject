@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../data/models/message_model.dart';
 import '../binding/messenger_binding.dart';
@@ -18,7 +19,7 @@ class MessengerListView extends StatelessWidget {
     final controller = Get.find<MessengerController>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bg,
       appBar: AppBar(title: const Text('Messages')),
       body: SafeArea(
         child: Column(
@@ -29,9 +30,9 @@ class MessengerListView extends StatelessWidget {
                 onChanged: controller.setQuery,
                 decoration: InputDecoration(
                   hintText: 'Search conversations...',
-                  prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+                  prefixIcon: Icon(Icons.search, color: context.textSecondaryColor, size: 20),
                   filled: true,
-                  fillColor: AppColors.inputFill,
+                  fillColor: context.cardBgAlt,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                 ),
               ),
@@ -43,11 +44,11 @@ class MessengerListView extends StatelessWidget {
                 }
                 final threads = controller.filtered;
                 if (threads.isEmpty) {
-                  return const Center(child: Text('No conversations', style: TextStyle(color: AppColors.textSecondary)));
+                  return Center(child: Text('No conversations', style: TextStyle(color: context.textSecondaryColor)));
                 }
                 return ListView.separated(
                   itemCount: threads.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 84, color: AppColors.divider),
+                  separatorBuilder: (_, __) => Divider(height: 1, indent: 84, color: context.borderColor),
                   itemBuilder: (_, i) {
                     final t = threads[i];
                     final last = t.lastMessage;
@@ -61,12 +62,12 @@ class MessengerListView extends StatelessWidget {
                         size: 52,
                         onTap: () => Get.to(() => ChatThreadView(thread: t)),
                       ),
-                      title: Text(t.peer.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      title: Text(t.peer.name, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.textPrimaryColor)),
                       subtitle: Text(
                         _preview(last),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        style: TextStyle(color: context.textSecondaryColor, fontSize: 12),
                       ),
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -74,7 +75,7 @@ class MessengerListView extends StatelessWidget {
                         children: [
                           if (last != null)
                             Text(timeago.format(last.createdAt),
-                                style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                                style: TextStyle(fontSize: 10, color: context.textSecondaryColor)),
                           if (t.unreadCount > 0) ...[
                             const SizedBox(height: 6),
                             Container(

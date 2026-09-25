@@ -1,4 +1,3 @@
-
 import '../../modules/finance/models/saving_goal_model.dart';
 import '../../modules/finance/models/transaction_model.dart';
 import '../providers/api_provider.dart';
@@ -54,9 +53,7 @@ class RestFinanceRepository implements FinanceRepository {
 
     do {
       final data = await _api.get('/expenses?page=$page&size=100');
-      final pageMap = data is Map
-          ? data
-          : const <String, dynamic>{};
+      final pageMap = data is Map ? data : const <String, dynamic>{};
       final content = pageMap['content'];
       final items = content is List ? content : const <dynamic>[];
       final total = (pageMap['totalElements'] as num?)?.toInt() ?? 0;
@@ -79,13 +76,35 @@ class RestFinanceRepository implements FinanceRepository {
   @override
   Future<TransactionModel> createTransaction(TransactionModel t) async {
     final data = await _api.post('/expenses', _transactionBody(t));
-    return _toTransaction(data as Map<String, dynamic>);
+    final parsed = _toTransaction(data as Map<String, dynamic>);
+    if (parsed.category.name.isEmpty && t.category.name.isNotEmpty) {
+      return TransactionModel(
+        id: parsed.id,
+        type: parsed.type,
+        category: t.category,
+        amount: parsed.amount,
+        note: parsed.note,
+        date: parsed.date,
+      );
+    }
+    return parsed;
   }
 
   @override
   Future<TransactionModel> updateTransaction(TransactionModel t) async {
     final data = await _api.put('/expenses/${t.id}', _transactionBody(t));
-    return _toTransaction(data as Map<String, dynamic>);
+    final parsed = _toTransaction(data as Map<String, dynamic>);
+    if (parsed.category.name.isEmpty && t.category.name.isNotEmpty) {
+      return TransactionModel(
+        id: parsed.id,
+        type: parsed.type,
+        category: t.category,
+        amount: parsed.amount,
+        note: parsed.note,
+        date: parsed.date,
+      );
+    }
+    return parsed;
   }
 
   @override
@@ -112,7 +131,9 @@ class RestFinanceRepository implements FinanceRepository {
 
   @override
   Future<SavingGoalModel> depositToSavingGoal(
-      SavingGoalModel goal, double amount) async {
+    SavingGoalModel goal,
+    double amount,
+  ) async {
     final data = await _api.post(
       '/saving-goals/${goal.id}/deposit',
       goal.toDepositBody(amount),
@@ -148,15 +169,21 @@ class RestFinanceRepository implements FinanceRepository {
   }
 
   TransactionModel _toTransaction(Map<String, dynamic> json) {
+    final rawCatId = json['categoryId'] ?? json['category']?['id'];
+    final categoryId = rawCatId is num
+        ? rawCatId.toInt()
+        : int.tryParse(rawCatId?.toString() ?? '');
     final category = TransactionCategory.fromJson(
       (json['category'] as Map<String, dynamic>?) ??
-          (json['categoryName'] != null
-              ? {'id': json['categoryId'], 'name': json['categoryName'], 'icon': json['categoryIcon']}
-              : const <String, dynamic>{}),
+          {
+            'id': categoryId,
+            'name': json['categoryName'] ?? 'Unknown',
+            'icon': json['categoryIcon'] ?? '❓',
+          },
     );
     return TransactionModel(
       id: json['id'].toString(),
-      type: json['type'] as String? ?? 'expense',
+      type: (json['type'] as String?)?.toLowerCase() ?? 'expense',
       category: category,
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
       note: json['note'] as String?,

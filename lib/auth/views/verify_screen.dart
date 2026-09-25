@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../routes/app_routes.dart';
 
 // ==================================================================
@@ -54,13 +55,21 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
         elevation: 0,
-        leading: const Icon(Icons.close, color: Colors.black),
-        title: const Text('YouthX', style: TextStyle(color: Colors.black)),
+        leading: Icon(Icons.close, color: isDark ? Colors.white : Colors.black),
+        title: Text(
+          'YouthX',
+          style: TextStyle(
+            color: isDark ? AppColors.textPrimaryDark : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -82,15 +91,22 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Verify your email',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               "We sent a 4-digit code to your Gmail account. Please enter it below to continue your journey.",
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : Colors.grey.shade600,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 32),
 
@@ -109,14 +125,20 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       maxLength: 1,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                       ),
                       decoration: InputDecoration(
                         counterText: '', // hides the 0/1 character counter
-                        border: OutlineInputBorder(
+                        filled: true,
+                        fillColor: isDark ? AppColors.inputFillDark : Colors.grey.shade50,
+                        enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: isDark ? AppColors.borderDark : Colors.grey.shade300,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -141,7 +163,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                   backgroundColor: const Color(0xFF4A6CF7),
                   disabledBackgroundColor: const Color(
                     0xFF4A6CF7,
-                  ).withOpacity(0.35),
+                  ).withValues(alpha: 0.35),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -163,7 +185,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
             TextButton(
               onPressed: () {},
-              child: const Text("Didn't receive the code? Resend code"),
+              child: Text(
+                "Didn't receive the code? Resend code",
+                style: TextStyle(
+                  color: isDark ? const Color(0xFF6B8AFF) : const Color(0xFF4A6CF7),
+                ),
+              ),
             ),
           ],
         ),

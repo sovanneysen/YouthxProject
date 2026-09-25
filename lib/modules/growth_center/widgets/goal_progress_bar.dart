@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class GoalProgressBar extends StatelessWidget {
   final double progress;
@@ -19,7 +20,7 @@ class GoalProgressBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
               minHeight: 8,
-              backgroundColor: const Color(0xFFE5E7EB),
+              backgroundColor: context.cardBgAlt,
               valueColor: AlwaysStoppedAnimation<Color>(color),
               semanticsLabel: 'Goal progress',
               semanticsValue: '${(progress.clamp(0.0, 1.0) * 100).round()}',
@@ -39,3 +40,4 @@ class GoalProgressBar extends StatelessWidget {
     );
   }
 }
+

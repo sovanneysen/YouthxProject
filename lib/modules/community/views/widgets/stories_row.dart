@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../data/models/story_model.dart';
 
@@ -42,7 +43,7 @@ class StoriesRow extends StatelessWidget {
                   user: s.author,
                   size: 56,
                   border: Border.all(
-                    color: s.viewed ? AppColors.border : AppColors.primary,
+                    color: s.viewed ? context.borderColor : AppColors.primary,
                     width: 2,
                   ),
                 ),
@@ -68,12 +69,13 @@ class _StoryItem extends StatelessWidget {
         onTap: onTap,
         child: Column(
           children: [
-            child,
+            child,  
             const SizedBox(height: 6),
-            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+            Text(label, style: TextStyle(fontSize: 10, color: context.textSecondaryColor)),
           ],
         ),
       ),
     );
   }
 }
+

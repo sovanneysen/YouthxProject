@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class ConfirmDeleteDialog extends StatelessWidget {
   final String message;
@@ -21,25 +22,31 @@ class ConfirmDeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: context.cardBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: context.isDark
+            ? BorderSide(color: context.borderColor)
+            : BorderSide.none,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Are you sure?',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF1E1B2E),
+                color: context.textPrimaryColor,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               message,
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 14, color: context.textSecondaryColor),
             ),
             const SizedBox(height: 24),
             Row(
@@ -49,16 +56,16 @@ class ConfirmDeleteDialog extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(false),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: Colors.grey.shade300),
+                      side: BorderSide(color: context.borderColor),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Cancel',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF374151),
+                        color: context.textPrimaryColor,
                       ),
                     ),
                   ),
@@ -90,3 +97,4 @@ class ConfirmDeleteDialog extends StatelessWidget {
     );
   }
 }
+

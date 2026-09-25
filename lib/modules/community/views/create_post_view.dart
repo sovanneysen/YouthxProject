@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../auth/controllers/auth_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/selectable_chip.dart';
 import '../../../core/widgets/user_avatar.dart';
@@ -58,7 +59,7 @@ class _CreatePostViewState extends State<CreatePostView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bg,
       appBar: AppBar(
         title: Text(c.isEditing ? 'Edit Post' : 'Create Post'),
         actions: [
@@ -104,11 +105,11 @@ class _CreatePostViewState extends State<CreatePostView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(me.name,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 14)),
-                        const Text('Posting to Community',
                             style: TextStyle(
-                                fontSize: 12, color: AppColors.textSecondary)),
+                                fontWeight: FontWeight.w700, fontSize: 14, color: context.textPrimaryColor)),
+                        Text('Posting to Community',
+                            style: TextStyle(
+                                fontSize: 12, color: context.textSecondaryColor)),
                       ],
                     ),
                   ],
@@ -119,12 +120,14 @@ class _CreatePostViewState extends State<CreatePostView> {
           const SizedBox(height: 16),
           TextField(
             controller: c.captionController,
+            style: TextStyle(color: context.textPrimaryColor),
             maxLines: 5,
             minLines: 3,
             decoration: InputDecoration(
               hintText: "What's on your mind?",
+              hintStyle: TextStyle(color: context.textSecondaryColor),
               filled: true,
-              fillColor: AppColors.surfaceAlt,
+              fillColor: context.cardBgAlt,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             ),
             onChanged: (_) {},
@@ -134,8 +137,8 @@ class _CreatePostViewState extends State<CreatePostView> {
           const SizedBox(height: 8),
           _MediaButtons(controller: c),
           const SizedBox(height: 24),
-          const Text('How are you feeling?',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text('How are you feeling?',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.textPrimaryColor)),
           const SizedBox(height: 12),
           Obx(() => Wrap(
                 spacing: 8,
@@ -149,8 +152,8 @@ class _CreatePostViewState extends State<CreatePostView> {
                     .toList(),
               )),
           const SizedBox(height: 24),
-          const Text('Add a tag',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text('Add a tag',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.textPrimaryColor)),
           const SizedBox(height: 12),
           Obx(() => Wrap(
                 spacing: 8,
@@ -258,16 +261,16 @@ class _MediaChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.surfaceAlt,
+          color: context.cardBgAlt,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.borderColor),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: AppColors.textSecondary),
+            Icon(icon, size: 18, color: context.textSecondaryColor),
             const SizedBox(width: 6),
-            Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            Text(label, style: TextStyle(fontSize: 12, color: context.textSecondaryColor, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -293,10 +296,12 @@ class _CustomTagFieldState extends State<_CustomTagField> {
         Expanded(
           child: TextField(
             controller: _fieldController,
+            style: TextStyle(color: context.textPrimaryColor),
             decoration: InputDecoration(
               hintText: 'Add a custom tag',
+              hintStyle: TextStyle(color: context.textSecondaryColor),
               filled: true,
-              fillColor: AppColors.surfaceAlt,
+              fillColor: context.cardBgAlt,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             ),
             onSubmitted: (v) {

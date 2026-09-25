@@ -20,6 +20,7 @@ class TransactionCategory {
       id: json['id'] as int?,
       name: json['name'] as String? ?? '',
       icon: json['icon'] as String? ?? '',
+      isIncome: json['isIncome'] as bool? ?? false,
     );
   }
 }

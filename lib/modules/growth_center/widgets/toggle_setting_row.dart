@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class ToggleSettingRow extends StatelessWidget {
   final String title;
@@ -19,9 +20,9 @@ class ToggleSettingRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.borderColor),
       ),
       child: Row(
         children: [
@@ -31,15 +32,16 @@ class ToggleSettingRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
+                    color: context.textPrimaryColor,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
                 ),
               ],
             ),
@@ -54,3 +56,4 @@ class ToggleSettingRow extends StatelessWidget {
     );
   }
 }
+

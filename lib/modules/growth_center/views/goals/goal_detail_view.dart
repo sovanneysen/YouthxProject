@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 import '../../models/goal_model.dart';
 import '../../utils/category_style.dart';
 
@@ -34,38 +35,46 @@ class _GoalDetailViewState extends State<GoalDetailView> {
           ),
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            decoration: BoxDecoration(
+              color: context.cardBg,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Log progress',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: context.textPrimaryColor,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'How much did you add towards "${_goal.title}"?',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
                   autofocus: true,
+                  style: TextStyle(color: context.textPrimaryColor),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                   decoration: InputDecoration(
                     hintText: 'e.g. 20',
+                    hintStyle: TextStyle(color: context.textSecondaryColor.withValues(alpha: 0.5)),
                     prefixText: _goal.unit == '\$' ? '\$ ' : null,
+                    prefixStyle: TextStyle(color: context.textPrimaryColor),
                     suffixText: (_goal.unit != null && _goal.unit != '\$')
                         ? _goal.unit
                         : null,
+                    suffixStyle: TextStyle(color: context.textPrimaryColor),
                     filled: true,
-                    fillColor: const Color(0xFFF6F7FB),
+                    fillColor: context.cardBgAlt,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 16,
@@ -130,11 +139,11 @@ class _GoalDetailViewState extends State<GoalDetailView> {
     final color = CategoryStyle.colorOf(goal.category);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEFF1FB),
+      backgroundColor: context.bg,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.cardBg,
         elevation: 0,
-        foregroundColor: const Color(0xFF1E1B2E),
+        foregroundColor: context.textPrimaryColor,
         title: const Text('Goal Details'),
       ),
       floatingActionButton: goal.isNumericTracked
@@ -175,20 +184,21 @@ class _GoalDetailViewState extends State<GoalDetailView> {
                     children: [
                       Text(
                         goal.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
+                          color: context.textPrimaryColor,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         CategoryStyle.displayLabel(
-                          goal.category,
+                           goal.category,
                           goal.customCategoryLabel,
                         ),
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey.shade600,
+                          color: context.textSecondaryColor,
                         ),
                       ),
                     ],
@@ -200,15 +210,20 @@ class _GoalDetailViewState extends State<GoalDetailView> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(20),
+                border: context.isDark ? Border.all(color: context.borderColor) : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Progress',
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: context.textPrimaryColor,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ClipRRect(
@@ -216,7 +231,7 @@ class _GoalDetailViewState extends State<GoalDetailView> {
                     child: LinearProgressIndicator(
                       value: goal.effectiveProgress,
                       minHeight: 14,
-                      backgroundColor: Colors.grey.shade200,
+                      backgroundColor: context.cardBgAlt,
                       valueColor: AlwaysStoppedAnimation(color),
                     ),
                   ),
@@ -226,7 +241,10 @@ class _GoalDetailViewState extends State<GoalDetailView> {
                     children: [
                       Text(
                         '${(goal.effectiveProgress * 100).round()}% complete',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: context.textPrimaryColor,
+                        ),
                       ),
                       if (goal.isNumericTracked)
                         Text(
@@ -245,8 +263,9 @@ class _GoalDetailViewState extends State<GoalDetailView> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(20),
+                border: context.isDark ? Border.all(color: context.borderColor) : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,11 +309,17 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: Colors.grey.shade500),
+        Icon(icon, size: 18, color: context.textSecondaryColor),
         const SizedBox(width: 10),
-        Text(label, style: TextStyle(color: Colors.grey.shade600)),
+        Text(label, style: TextStyle(color: context.textSecondaryColor)),
         const Spacer(),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: context.textPrimaryColor,
+          ),
+        ),
       ],
     );
   }

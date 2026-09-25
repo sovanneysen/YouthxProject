@@ -9,7 +9,6 @@ void main() {
         'id': '3f2a1c5e-0000-4000-8000-000000000001',
         'email': 'alex@university.edu',
         'fullName': 'Alex Johnson',
-        'xpPoints': 0,
         'createdAt': '2026-09-19T10:00:00+07:00',
         'updatedAt': '2026-09-19T10:00:00+07:00',
       },
@@ -21,7 +20,6 @@ void main() {
     expect(result.user.id, '3f2a1c5e-0000-4000-8000-000000000001');
     expect(result.user.email, 'alex@university.edu');
     expect(result.user.fullName, 'Alex Johnson');
-    expect(result.user.xpPoints, 0);
     expect(result.user.createdAt, isNotNull);
     expect(result.user.updatedAt, isNotNull);
   });
@@ -31,7 +29,6 @@ void main() {
       'id': '3f2a1c5e-0000-4000-8000-000000000001',
       'email': 'alex@university.edu',
       'fullName': 'Alex Johnson',
-      'xpPoints': 0,
       'createdAt': '2026-09-19T10:00:00+07:00',
       'updatedAt': null,
     };
@@ -39,7 +36,6 @@ void main() {
     final user = AuthUserModel.fromJson(json);
 
     expect(user.fullName, 'Alex Johnson');
-    expect(user.xpPoints, 0);
     expect(user.createdAt, isNotNull);
     expect(user.updatedAt, isNull);
   });
@@ -51,7 +47,6 @@ void main() {
       'fullName': 'A B',
     });
 
-    expect(user.xpPoints, 0);
     expect(user.createdAt, isNull);
     expect(user.updatedAt, isNull);
   });

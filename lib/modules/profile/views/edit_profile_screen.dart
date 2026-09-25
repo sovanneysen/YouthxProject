@@ -34,8 +34,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: buildSimpleAppBar('Edit Profile'),
+      backgroundColor: context.bg,
+      appBar: buildSimpleAppBar(context, 'Edit Profile'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -75,14 +75,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ),
             const SizedBox(height: 28),
-            _label('Full name'),
-            _textField(_nameController),
+            _label(context, 'Full name'),
+            _textField(context, _nameController),
             const SizedBox(height: 16),
-            _label('Bio'),
-            _textField(_bioController, maxLines: 2),
+            _label(context, 'Bio'),
+            _textField(context, _bioController, maxLines: 2),
             const SizedBox(height: 16),
-            _label('Location'),
-            _textField(_locationController),
+            _label(context, 'Location'),
+            _textField(context, _locationController),
             const SizedBox(height: 28),
             SizedBox(
               width: double.infinity,
@@ -102,26 +102,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _label(String text) => Padding(
+  Widget _label(BuildContext context, String text) => Padding(
         padding: const EdgeInsets.only(bottom: 6),
-        child: Text(text, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+        child: Text(text, style: TextStyle(fontSize: 12, color: context.textSecondaryColor)),
       );
 
-  Widget _textField(TextEditingController controller, {int maxLines = 1}) {
+  Widget _textField(BuildContext context, TextEditingController controller, {int maxLines = 1}) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      style: TextStyle(color: context.textPrimaryColor, fontSize: 14),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.cardBgAlt,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: BorderSide(color: context.borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
+          borderSide: BorderSide(color: context.borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

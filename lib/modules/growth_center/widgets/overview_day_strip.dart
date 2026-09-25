@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 
 class OverviewDayStrip extends StatelessWidget {
   final List<DateTime> days; // always 7 days, Monday first
@@ -34,8 +35,11 @@ class OverviewDayStrip extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 3),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.blue : Colors.white,
+                color: isSelected ? Colors.blue : context.cardBg,
                 borderRadius: BorderRadius.circular(16),
+                border: context.isDark && !isSelected
+                    ? Border.all(color: context.borderColor)
+                    : null,
               ),
               child: Column(
                 children: [
@@ -44,7 +48,7 @@ class OverviewDayStrip extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: isSelected ? Colors.white70 : Colors.grey.shade500,
+                      color: isSelected ? Colors.white70 : context.textSecondaryColor,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -55,7 +59,7 @@ class OverviewDayStrip extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF1E1B2E),
+                          : context.textPrimaryColor,
                     ),
                   ),
                   const SizedBox(height: 4),

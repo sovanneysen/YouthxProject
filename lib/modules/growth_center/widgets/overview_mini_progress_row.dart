@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 
 class OverviewMiniProgressRow extends StatelessWidget {
   final String label;
@@ -20,7 +21,11 @@ class OverviewMiniProgressRow extends StatelessWidget {
           width: 80,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimaryColor,
+            ),
           ),
         ),
         Expanded(
@@ -29,7 +34,7 @@ class OverviewMiniProgressRow extends StatelessWidget {
             child: LinearProgressIndicator(
               value: percent,
               minHeight: 8,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: context.cardBgAlt,
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),

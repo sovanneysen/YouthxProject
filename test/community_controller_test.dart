@@ -163,7 +163,6 @@ void main() {
             id: 'user-1',
             email: 'user@youthx.dev',
             fullName: 'Draft User',
-            xpPoints: 10,
           ),
       );
 

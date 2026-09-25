@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../routes/app_routes.dart';
 
 // ==================================================================
@@ -8,6 +9,7 @@ import '../../routes/app_routes.dart';
 // ==================================================================
 class _OnboardingPageData {
   final Color background;
+  final Color darkBackground;
   final Color accent;
   final IconData centerIcon;
   final String title;
@@ -16,6 +18,7 @@ class _OnboardingPageData {
 
   const _OnboardingPageData({
     required this.background,
+    required this.darkBackground,
     required this.accent,
     required this.centerIcon,
     required this.title,
@@ -38,6 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<_OnboardingPageData> pages = const [
     _OnboardingPageData(
       background: Color(0xFFEAF0FE),
+      darkBackground: Color(0xFF101626),
       accent: Color(0xFF4A6CF7),
       centerIcon: Icons.groups,
       title: 'Connect with your Community',
@@ -47,6 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     _OnboardingPageData(
       background: Color(0xFFF1EBFE),
+      darkBackground: Color(0xFF161126),
       accent: Color(0xFF8B5CF6),
       centerIcon: Icons.track_changes,
       title: 'Track Goals & Build Habits',
@@ -56,6 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     _OnboardingPageData(
       background: Color(0xFFE6F8EF),
+      darkBackground: Color(0xFF0D1C16),
       accent: Color(0xFF10B981),
       centerIcon: Icons.account_balance_wallet,
       title: 'Master Your Finances',
@@ -77,10 +83,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final page = pages[currentPage];
+    final bgColor = isDark ? page.darkBackground : page.background;
 
     return Scaffold(
-      backgroundColor: page.background,
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -128,9 +136,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           p.title,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? AppColors.textPrimaryDark
+                                : AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -139,7 +150,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey.shade700,
+                            color: isDark
+                                ? AppColors.textSecondaryDark
+                                : Colors.grey.shade700,
                           ),
                         ),
                       ],
@@ -160,7 +173,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: isActive ? 20 : 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: isActive ? page.accent : Colors.grey.shade300,
+                    color: isActive
+                        ? page.accent
+                        : (isDark ? AppColors.borderDark : Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 );

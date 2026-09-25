@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
+export '../../../core/theme/app_theme.dart';
 
 /// Shared colors so every screen matches the Profile screen's look.
 class AppColors {
@@ -10,28 +12,35 @@ class AppColors {
 }
 
 /// Shared app bar used by every sub-page for a consistent look.
-PreferredSizeWidget buildSimpleAppBar(String title) {
+PreferredSizeWidget buildSimpleAppBar(BuildContext context, String title) {
   return AppBar(
-    backgroundColor: AppColors.background,
+    backgroundColor: context.bg,
     elevation: 0,
-    foregroundColor: AppColors.textDark,
+    foregroundColor: context.textPrimaryColor,
     title: Text(
       title,
-      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 17,
+        color: context.textPrimaryColor,
+      ),
     ),
   );
 }
 
-BoxDecoration cardDecoration() {
+BoxDecoration cardDecoration(BuildContext context) {
   return BoxDecoration(
-    color: Colors.white,
+    color: context.cardBg,
     borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.04),
-        blurRadius: 12,
-        offset: const Offset(0, 4),
-      ),
-    ],
+    border: context.isDark ? Border.all(color: context.borderColor, width: 1) : null,
+    boxShadow: context.isDark
+        ? []
+        : [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
   );
-}
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:youthx/core/theme/app_theme.dart';
 
 class OverviewNavArrow extends StatelessWidget {
   final IconData icon;
@@ -15,9 +16,9 @@ class OverviewNavArrow extends StatelessWidget {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.grey.shade100,
+          color: context.cardBgAlt,
         ),
-        child: Icon(icon, size: 20, color: Colors.grey.shade700),
+        child: Icon(icon, size: 20, color: context.textSecondaryColor),
       ),
     );
   }

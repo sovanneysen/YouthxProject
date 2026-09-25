@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../../data/providers/api_provider.dart';
 import '../../routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
@@ -87,10 +88,43 @@ class _AuthScreenState extends State<AuthScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
+  InputDecoration _inputDecoration({
+    required String hintText,
+    required bool isDark,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(
+        color: isDark ? AppColors.textSecondaryDark : Colors.grey.shade400,
+        fontSize: 14,
+      ),
+      filled: true,
+      fillColor: isDark ? AppColors.inputFillDark : Colors.grey.shade50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.borderDark : Colors.grey.shade300,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(
+          color: Color(0xFF4A6CF7),
+          width: 1.5,
+        ),
+      ),
+      suffixIcon: suffixIcon,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -119,10 +153,14 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Center(
+              Center(
                 child: Text(
                   'YouthX',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -131,7 +169,7 @@ class _AuthScreenState extends State<AuthScreen> {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: isDark ? AppColors.surfaceDarkAlt : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -140,6 +178,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: _TabButton(
                         label: 'Sign Up',
                         selected: isSignUp,
+                        isDark: isDark,
                         onTap: () => setState(() => isSignUp = true),
                       ),
                     ),
@@ -147,6 +186,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: _TabButton(
                         label: 'Sign In',
                         selected: !isSignUp,
+                        isDark: isDark,
                         onTap: () => setState(() => isSignUp = false),
                       ),
                     ),
@@ -157,9 +197,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
               Text(
                 isSignUp ? 'Create your account' : 'Welcome back!',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -167,56 +208,78 @@ class _AuthScreenState extends State<AuthScreen> {
                 isSignUp
                     ? 'Join 50,000+ students building great habits.'
                     : 'Sign in to continue your journey.',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(
+                  color: isDark ? AppColors.textSecondaryDark : Colors.grey.shade600,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 20),
 
               // Full name — only on Sign Up
               if (isSignUp) ...[
-                const Text(
+                Text(
                   'Full Name',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                  ),
+                  decoration: _inputDecoration(
                     hintText: 'Alex Johnson',
-                    border: OutlineInputBorder(),
+                    isDark: isDark,
                   ),
                 ),
                 const SizedBox(height: 16),
               ],
 
-              const Text(
+              Text(
                 'Email Address',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                ),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
+                style: TextStyle(
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                ),
+                decoration: _inputDecoration(
                   hintText: 'alex@university.edu',
-                  border: OutlineInputBorder(),
+                  isDark: isDark,
                 ),
               ),
               const SizedBox(height: 16),
 
-              const Text(
+              Text(
                 'Password',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                ),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: passwordController,
                 obscureText: obscurePassword,
-                decoration: InputDecoration(
+                style: TextStyle(
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                ),
+                decoration: _inputDecoration(
                   hintText: isSignUp ? 'Create a password' : 'Your password',
-                  border: const OutlineInputBorder(),
+                  isDark: isDark,
                   suffixIcon: IconButton(
                     icon: Icon(
                       obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: isDark ? AppColors.textSecondaryDark : Colors.grey.shade600,
                     ),
                     onPressed: () {
                       setState(() => obscurePassword = !obscurePassword);
@@ -230,7 +293,12 @@ class _AuthScreenState extends State<AuthScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text('Forgot password?'),
+                    child: Text(
+                      'Forgot password?',
+                      style: TextStyle(
+                        color: isDark ? const Color(0xFF6B8AFF) : const Color(0xFF4A6CF7),
+                      ),
+                    ),
                   ),
                 ),
               ] else
@@ -281,6 +349,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 icon: const Icon(Icons.g_mobiledata, size: 28),
                 label: const Text('Continue with Google'),
                 style: OutlinedButton.styleFrom(
+                  foregroundColor: isDark ? AppColors.textPrimaryDark : Colors.black87,
+                  side: BorderSide(
+                    color: isDark ? AppColors.borderDark : Colors.grey.shade300,
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -299,11 +371,13 @@ class _AuthScreenState extends State<AuthScreen> {
 class _TabButton extends StatelessWidget {
   final String label;
   final bool selected;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _TabButton({
     required this.label,
     required this.selected,
+    required this.isDark,
     required this.onTap,
   });
 
@@ -315,12 +389,14 @@ class _TabButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
+          color: selected
+              ? (isDark ? AppColors.surfaceDark : Colors.white)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
                     blurRadius: 4,
                   ),
                 ]
@@ -331,7 +407,9 @@ class _TabButton extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: selected ? Colors.black : Colors.grey,
+            color: selected
+                ? (isDark ? Colors.white : Colors.black)
+                : (isDark ? AppColors.textSecondaryDark : Colors.grey),
           ),
         ),
       ),

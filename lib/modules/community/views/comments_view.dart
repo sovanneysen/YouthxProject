@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../auth/controllers/auth_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../data/models/post_model.dart';
 import '../../../data/models/user_model.dart';
@@ -77,12 +78,12 @@ class _CommentsViewState extends State<CommentsView> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Comments', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: context.borderColor, borderRadius: BorderRadius.circular(2))),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text('Comments', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.textPrimaryColor)),
             ),
-            const Divider(height: 1),
+            Divider(height: 1, color: context.borderColor),
             Expanded(child: Obx(_buildList)),
             SafeArea(
               top: false,
@@ -125,10 +126,12 @@ class _CommentsViewState extends State<CommentsView> {
                         Expanded(
                           child: Obx(() => TextField(
                                 controller: c.inputController,
+                                style: TextStyle(color: context.textPrimaryColor),
                                 decoration: InputDecoration(
                                   hintText: c.replyingTo.value == null ? 'Write a comment...' : 'Write a reply…',
+                                  hintStyle: TextStyle(color: context.textSecondaryColor),
                                   filled: true,
-                                  fillColor: AppColors.surfaceAlt,
+                                  fillColor: context.cardBgAlt,
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                 ),
@@ -164,7 +167,7 @@ class _CommentsViewState extends State<CommentsView> {
           children: [
             Text(loadError,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary)),
+                style: TextStyle(color: context.textSecondaryColor)),
             const SizedBox(height: 10),
             OutlinedButton(onPressed: c.load, child: const Text('Retry')),
           ],
@@ -172,8 +175,8 @@ class _CommentsViewState extends State<CommentsView> {
       );
     }
     if (c.comments.isEmpty) {
-      return const Center(
-        child: Text('Be the first to comment', style: TextStyle(color: AppColors.textSecondary)),
+      return Center(
+        child: Text('Be the first to comment', style: TextStyle(color: context.textSecondaryColor)),
       );
     }
     final items = <Widget>[];

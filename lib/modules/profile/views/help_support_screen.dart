@@ -29,22 +29,22 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: buildSimpleAppBar('Help and Support'),
+      backgroundColor: context.bg,
+      appBar: buildSimpleAppBar(context, 'Help and Support'),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Text('Frequently asked questions',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 12, color: context.textSecondaryColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           Container(
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: Column(
               children: List.generate(_faqs.length, (i) {
                 final faq = _faqs[i];
                 return Column(
                   children: [
-                    if (i != 0) Divider(height: 1, color: Colors.grey.shade200, indent: 14, endIndent: 14),
+                    if (i != 0) Divider(height: 1, color: context.borderColor, indent: 14, endIndent: 14),
                     InkWell(
                       onTap: () => setState(() => faq.expanded = !faq.expanded),
                       child: Padding(
@@ -56,16 +56,16 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                               children: [
                                 Expanded(
                                   child: Text(faq.question,
-                                      style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500)),
+                                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500, color: context.textPrimaryColor)),
                                 ),
                                 Icon(faq.expanded ? Icons.expand_less : Icons.expand_more,
-                                    color: Colors.grey.shade500),
+                                    color: context.textSecondaryColor),
                               ],
                             ),
                             if (faq.expanded) ...[
                               const SizedBox(height: 8),
                               Text(faq.answer,
-                                  style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600, height: 1.4)),
+                                  style: TextStyle(fontSize: 12.5, color: context.textSecondaryColor, height: 1.4)),
                             ],
                           ],
                         ),
@@ -78,25 +78,25 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
           ),
           const SizedBox(height: 24),
           Text('Still need help?',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 12, color: context.textSecondaryColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           Container(
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: Column(
               children: [
                 ListTile(
                   leading: const Icon(Icons.chat_bubble_outline, color: AppColors.primaryPurple),
-                  title: const Text('Contact support', style: TextStyle(fontSize: 13.5)),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                  title: Text('Contact support', style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
+                  trailing: Icon(Icons.chevron_right, color: context.textSecondaryColor),
                   onTap: () {
                     // TODO: open a support chat/email flow.
                   },
                 ),
-                Divider(height: 1, color: Colors.grey.shade200, indent: 14, endIndent: 14),
+                Divider(height: 1, color: context.borderColor, indent: 14, endIndent: 14),
                 ListTile(
                   leading: const Icon(Icons.bug_report_outlined, color: AppColors.primaryPurple),
-                  title: const Text('Report a problem', style: TextStyle(fontSize: 13.5)),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                  title: Text('Report a problem', style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
+                  trailing: Icon(Icons.chevron_right, color: context.textSecondaryColor),
                   onTap: () {
                     // TODO: open a bug report form.
                   },

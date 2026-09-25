@@ -107,7 +107,7 @@ void main() {
 
     expect(shellIndex(tester), 4);
     expect(find.byType(ProfileScreen), findsOneWidget);
-    expect(find.text('Achievements'), findsOneWidget);
+    expect(find.text('My posts'), findsOneWidget);
     // Only the shell bar remains; ProfileScreen no longer renders its own nav.
     expect(find.byType(BottomNavigationBar), findsOneWidget);
   });

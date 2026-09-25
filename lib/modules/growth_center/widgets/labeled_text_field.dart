@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class LabeledTextField extends StatelessWidget {
   final String label;
@@ -32,7 +33,7 @@ class LabeledTextField extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.6,
-            color: Colors.grey.shade600,
+            color: context.textSecondaryColor,
           ),
         ),
         const SizedBox(height: 8),
@@ -41,12 +42,13 @@ class LabeledTextField extends StatelessWidget {
           readOnly: readOnly,
           onTap: onTap,
           keyboardType: keyboardType,
+          style: TextStyle(color: context.textPrimaryColor),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+            hintStyle: TextStyle(color: context.textSecondaryColor, fontSize: 15),
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: const Color(0xFFF6F7FB),
+            fillColor: context.cardBgAlt,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -61,3 +63,4 @@ class LabeledTextField extends StatelessWidget {
     );
   }
 }
+

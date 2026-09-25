@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:youthx/core/theme/app_theme.dart';
-import 'package:youthx/core/widgets/card_overflow_menu.dart';
+import '../../../core/widgets/card_overflow_menu.dart';
 import '../models/goal_model.dart';
 import '../utils/category_style.dart';
 import 'goal_progress_bar.dart';
@@ -33,13 +33,16 @@ class GoalCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.cardBg,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: context.isDark ? Border.all(color: context.borderColor) : null,
+          boxShadow: context.isDark
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

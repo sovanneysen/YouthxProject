@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:youthx/core/widgets/confirm_delete_dialog.dart';
-import 'package:youthx/modules/growth_center/views/habits/add_habit_modal.dart';
+import 'package:youthx/core/theme/app_theme.dart';
+import '../../../core/widgets/confirm_delete_dialog.dart';
+import 'habits/add_habit_modal.dart';
 import '../models/habit_model.dart';
 import '../widgets/habit_card.dart';
 import '../widgets/goal_progress_bar.dart';
@@ -58,17 +59,18 @@ class HabitsView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'My Habits',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
+                        color: context.textPrimaryColor,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '$_completedCount/${habits.length} done today 💪',
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      style: TextStyle(fontSize: 14, color: context.textSecondaryColor),
                     ),
                   ],
                 ),

@@ -18,41 +18,41 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: buildSimpleAppBar('Notifications'),
+      backgroundColor: context.bg,
+      appBar: buildSimpleAppBar(context, 'Notifications'),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Text('Preferences',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 12, color: context.textSecondaryColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           Container(
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: Column(
               children: [
-                _switchTile('Likes on your posts', _likes, (v) => setState(() => _likes = v)),
-                _divider(),
-                _switchTile('Comments', _comments, (v) => setState(() => _comments = v)),
-                _divider(),
-                _switchTile('New followers', _newFollowers, (v) => setState(() => _newFollowers = v)),
-                _divider(),
-                _switchTile('Study reminders', _reminders, (v) => setState(() => _reminders = v)),
+                _switchTile(context, 'Likes on your posts', _likes, (v) => setState(() => _likes = v)),
+                _divider(context),
+                _switchTile(context, 'Comments', _comments, (v) => setState(() => _comments = v)),
+                _divider(context),
+                _switchTile(context, 'New followers', _newFollowers, (v) => setState(() => _newFollowers = v)),
+                _divider(context),
+                _switchTile(context, 'Study reminders', _reminders, (v) => setState(() => _reminders = v)),
               ],
             ),
           ),
           const SizedBox(height: 24),
           Text('Recent',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+              style: TextStyle(fontSize: 12, color: context.textSecondaryColor, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           Container(
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: Column(
               children: [
-                _notificationTile('Maria Chen liked your post', '2h ago'),
-                _divider(),
-                _notificationTile('Sam Patel started following you', '1d ago'),
-                _divider(),
-                _notificationTile('Reminder: Study group at 6 PM', '2d ago'),
+                _notificationTile(context, 'Maria Chen liked your post', '2h ago'),
+                _divider(context),
+                _notificationTile(context, 'Sam Patel started following you', '1d ago'),
+                _divider(context),
+                _notificationTile(context, 'Reminder: Study group at 6 PM', '2d ago'),
               ],
             ),
           ),
@@ -61,19 +61,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _switchTile(String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _switchTile(BuildContext context, String title, bool value, ValueChanged<bool> onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       child: Row(
         children: [
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 13.5))),
+          Expanded(child: Text(title, style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor))),
           Switch(value: value, activeColor: AppColors.primaryPurple, onChanged: onChanged),
         ],
       ),
     );
   }
 
-  Widget _notificationTile(String text, String time) {
+  Widget _notificationTile(BuildContext context, String text, String time) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
@@ -81,16 +81,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           Container(
             width: 34,
             height: 34,
-            decoration: const BoxDecoration(color: Color(0xFFE6E9FE), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: context.isDark ? AppColors.primaryPurple.withOpacity(0.18) : const Color(0xFFE6E9FE),
+              shape: BoxShape.circle,
+            ),
             child: const Icon(Icons.notifications, size: 16, color: AppColors.primaryPurple),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
-          Text(time, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+          Expanded(child: Text(text, style: TextStyle(fontSize: 13, color: context.textPrimaryColor))),
+          Text(time, style: TextStyle(fontSize: 11, color: context.textSecondaryColor)),
         ],
       ),
     );
   }
 
-  Widget _divider() => Divider(height: 1, color: Colors.grey.shade200, indent: 14, endIndent: 14);
+  Widget _divider(BuildContext context) => Divider(height: 1, color: context.borderColor, indent: 14, endIndent: 14);
 }

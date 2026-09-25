@@ -48,9 +48,15 @@ class _PostCardState extends State<PostCard> {
       decoration: BoxDecoration(
         color: context.cardBg,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4)),
-        ],
+        boxShadow: context.isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,19 +84,19 @@ class _PostCardState extends State<PostCard> {
               ),
               if (widget.isOwner)
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_horiz, color: AppColors.textSecondary),
+                  icon: Icon(Icons.more_horiz, color: context.textSecondaryColor),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   onSelected: (value) {
                     if (value == 'edit') widget.onEdit();
                     if (value == 'delete') widget.onDelete();
                   },
                   itemBuilder: (_) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'edit',
                       child: Row(children: [
-                        Icon(Icons.edit_outlined, size: 18, color: AppColors.textPrimary),
-                        SizedBox(width: 10),
-                        Text('Edit Post'),
+                        Icon(Icons.edit_outlined, size: 18, color: context.textPrimaryColor),
+                        const SizedBox(width: 10),
+                        Text('Edit Post', style: TextStyle(color: context.textPrimaryColor)),
                       ]),
                     ),
                     const PopupMenuItem(
@@ -152,7 +158,7 @@ class _PostCardState extends State<PostCard> {
                         width: i == _page ? 16 : 6,
                         height: 6,
                         decoration: BoxDecoration(
-                          color: i == _page ? AppColors.primary : AppColors.border,
+                          color: i == _page ? AppColors.primary : context.borderColor,
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),

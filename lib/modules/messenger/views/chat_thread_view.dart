@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../data/models/message_model.dart';
 import '../../../data/repositories/chat_repository.dart';
@@ -51,7 +52,7 @@ class _ChatThreadViewState extends State<ChatThreadView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.bg,
       appBar: AppBar(
         titleSpacing: 0,
         title: GestureDetector(
@@ -60,7 +61,7 @@ class _ChatThreadViewState extends State<ChatThreadView> {
             children: [
               UserAvatar(user: widget.thread.peer, size: 36),
               const SizedBox(width: 10),
-              Text(widget.thread.peer.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              Text(widget.thread.peer.name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.textPrimaryColor)),
             ],
           ),
         ),
@@ -97,8 +98,8 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = isMe ? AppColors.primary : AppColors.surface;
-    final fg = isMe ? Colors.white : AppColors.textPrimary;
+    final bg = isMe ? AppColors.primary : context.cardBg;
+    final fg = isMe ? Colors.white : context.textPrimaryColor;
 
     Widget content;
     switch (message.type) {
@@ -159,20 +160,22 @@ class _InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        border: Border(top: BorderSide(color: context.borderColor)),
       ),
       child: Row(
         children: [
-          IconButton(onPressed: c.pickImage, icon: const Icon(Icons.image_outlined, color: AppColors.textSecondary)),
+          IconButton(onPressed: c.pickImage, icon: Icon(Icons.image_outlined, color: context.textSecondaryColor)),
           Expanded(
             child: TextField(
               controller: c.inputController,
+              style: TextStyle(color: context.textPrimaryColor),
               decoration: InputDecoration(
                 hintText: 'Message...',
+                hintStyle: TextStyle(color: context.textSecondaryColor),
                 filled: true,
-                fillColor: AppColors.inputFill,
+                fillColor: context.cardBgAlt,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
               ),
@@ -199,9 +202,9 @@ class _ImageComposer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        border: Border(top: BorderSide(color: context.borderColor)),
       ),
       child: Obx(() {
         final path = c.pendingImagePath.value;
@@ -234,10 +237,12 @@ class _ImageComposer extends StatelessWidget {
             Expanded(
               child: TextField(
                 controller: c.captionController,
+                style: TextStyle(color: context.textPrimaryColor),
                 decoration: InputDecoration(
                   hintText: 'Add a caption...',
+                  hintStyle: TextStyle(color: context.textSecondaryColor),
                   filled: true,
-                  fillColor: AppColors.inputFill,
+                  fillColor: context.cardBgAlt,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
                 ),
@@ -265,18 +270,18 @@ class _RecordingBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.divider)),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        border: Border(top: BorderSide(color: context.borderColor)),
       ),
       child: Row(
         children: [
           IconButton(onPressed: c.cancelRecording, icon: const Icon(Icons.close, color: AppColors.danger)),
           const Icon(Icons.fiber_manual_record, color: AppColors.danger, size: 14),
           const SizedBox(width: 8),
-          Obx(() => Text(_format(c.recordSeconds.value), style: const TextStyle(fontWeight: FontWeight.w600))),
+          Obx(() => Text(_format(c.recordSeconds.value), style: TextStyle(fontWeight: FontWeight.w600, color: context.textPrimaryColor))),
           const Spacer(),
-          const Text('Recording voice message...', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          Text('Recording voice message...', style: TextStyle(color: context.textSecondaryColor, fontSize: 12)),
           const Spacer(),
           IconButton(
             onPressed: c.stopAndSendRecording,

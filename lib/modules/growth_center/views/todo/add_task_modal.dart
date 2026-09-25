@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:youthx/modules/growth_center/widgets/labeled_text_field.dart';
-import 'package:youthx/modules/growth_center/widgets/modal_header.dart';
-import 'package:youthx/modules/growth_center/widgets/primary_button.dart';
+import 'package:youthx/core/theme/app_theme.dart';
+import '../../widgets/labeled_text_field.dart';
+import '../../widgets/modal_header.dart';
+import '../../widgets/primary_button.dart';
 import '../../models/task_model.dart';
 import '../../utils/task_priority_style.dart';
 
@@ -85,9 +86,9 @@ class _AddTaskModalState extends State<AddTaskModal> {
         // pushes the modal above the keyboard when typing
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -108,12 +109,12 @@ class _AddTaskModalState extends State<AddTaskModal> {
             ),
             const SizedBox(height: 20),
 
-            const Text(
+            Text(
               'PRIORITY',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.grey,
+                color: context.textSecondaryColor,
               ),
             ),
             const SizedBox(height: 8),
@@ -132,7 +133,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? color : Colors.grey.shade300,
+                          color: isSelected ? color : context.borderColor,
                           width: isSelected ? 2 : 1,
                         ),
                       ),
@@ -141,7 +142,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          color: isSelected ? color : Colors.grey.shade600,
+                          color: isSelected ? color : context.textSecondaryColor,
                         ),
                       ),
                     ),
@@ -151,12 +152,12 @@ class _AddTaskModalState extends State<AddTaskModal> {
             ),
             const SizedBox(height: 20),
 
-            const Text(
+            Text(
               'DUE DATE',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.grey,
+                color: context.textSecondaryColor,
               ),
             ),
             const SizedBox(height: 8),

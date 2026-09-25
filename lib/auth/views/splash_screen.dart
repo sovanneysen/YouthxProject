@@ -30,14 +30,18 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF4A6CF7), Color(0xFF8B5CF6)],
+            colors: isDark
+                ? const [Color(0xFF131B38), Color(0xFF221345)]
+                : const [Color(0xFF4A6CF7), Color(0xFF8B5CF6)],
           ),
         ),
         child: SafeArea(
@@ -52,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Center(
@@ -81,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 Text(
                   'UNITE · EMPOWER · GROW',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 12,
                     letterSpacing: 2,
                   ),
@@ -108,8 +112,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF4A6CF7),
+                      backgroundColor: isDark ? const Color(0xFF4A6CF7) : Colors.white,
+                      foregroundColor: isDark ? Colors.white : const Color(0xFF4A6CF7),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -133,7 +137,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   },
                   child: Text(
                     'Already have an account? Sign In',
-                    style: TextStyle(color: Colors.white.withOpacity(0.85)),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -156,7 +160,7 @@ class _SplashTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(

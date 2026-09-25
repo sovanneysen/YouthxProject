@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class CardOverflowMenu extends StatelessWidget {
   final VoidCallback? onEdit;
@@ -12,13 +13,18 @@ class CardOverflowMenu extends StatelessWidget {
       width: 44,
       height: 44,
       child: PopupMenuButton<String>(
-        icon: Icon(Icons.more_vert_rounded, color: Colors.grey.shade500),
+        icon: Icon(Icons.more_vert_rounded, color: context.textSecondaryColor),
         padding: EdgeInsets.zero,
         offset: const Offset(0, 44),
-        color: Colors.white,
-        elevation: 8,
+        color: context.cardBg,
+        elevation: context.isDark ? 0 : 8,
         shadowColor: Colors.black26,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: context.isDark
+              ? BorderSide(color: context.borderColor)
+              : BorderSide.none,
+        ),
         constraints: const BoxConstraints(minWidth: 170, maxWidth: 200),
         itemBuilder: (context) => [
           PopupMenuItem<String>(
@@ -28,7 +34,7 @@ class CardOverflowMenu extends StatelessWidget {
             child: _MenuRow(
               icon: Icons.edit_outlined,
               label: 'Edit',
-              color: const Color(0xFF1E1B2E),
+              color: context.textPrimaryColor,
             ),
           ),
           PopupMenuItem<String>(

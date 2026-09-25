@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-
 import '../widgets/error_state_widget.dart';
 import '../widgets/loading_indicator.dart';
 import '../controllers/finance_controller.dart';
 import 'add_transaction_page.dart';
 import 'all_transactions_page.dart';
-import '../models/saving_goal_model.dart';
 import '../models/transaction_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../models/transaction_model.dart';
 
 /// Finance home — real data driven by [FinanceController].
 ///
@@ -26,8 +25,7 @@ class FinanceHomePage extends GetView<FinanceController> {
     final c = controller;
 
     return Scaffold(
-      backgroundColor:
-          context.isDark ? context.bg : const Color(0xFFF0F3FF),
+      backgroundColor: context.isDark ? context.bg : const Color(0xFFF0F3FF),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -68,157 +66,161 @@ class FinanceHomePage extends GetView<FinanceController> {
 
               Expanded(
                 child: Obx(() {
-                if (controller.loading.value) {
-                  return const LoadingIndicator();
-                }
-                if (controller.error.value != null) {
-                  return ErrorStateWidget(
-                    message: controller.error.value!,
-                    onRetry: controller.loadAll,
-                  );
-                }
-                final balance = controller.totalBalance;
-                final income = controller.totalIncome;
-                final expense = controller.totalExpense;
+                  if (controller.loading.value) {
+                    return const LoadingIndicator();
+                  }
+                  if (controller.error.value != null) {
+                    return ErrorStateWidget(
+                      message: controller.error.value!,
+                      onRetry: controller.loadAll,
+                    );
+                  }
+                  final balance = controller.totalBalance;
+                  final income = controller.totalIncome;
+                  final expense = controller.totalExpense;
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Balance card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4A6CF7), Color(0xFF7B4AF7)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Balance card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4A6CF7), Color(0xFF7B4AF7)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'TOTAL BALANCE',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _money(balance),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _balanceStat('↗ Income', _money(income)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'TOTAL BALANCE',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                letterSpacing: 1,
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _balanceStat(
-                                  '↘ Expenses',
-                                  '-\u0024' +
-                                      NumberFormat('#,##0.00')
-                                          .format(expense)
-                                          .replaceAll('-', ''),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _money(balance),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 36,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _balanceStat(
+                                    '↗ Income',
+                                    _money(income),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _balanceStat(
+                                    '↘ Expenses',
+                                    '-\u0024' +
+                                        NumberFormat(
+                                          '#,##0.00',
+                                        ).format(expense).replaceAll('-', ''),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // Spending breakdown
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: context.cardBg,
-                        borderRadius: BorderRadius.circular(16),
+                      // Spending breakdown
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: context.cardBg,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Spending Breakdown',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _SpendingBreakdown(categories: c.expenseCategories),
+                          ],
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 16),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Spending Breakdown',
+                            'Recent Transactions',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          _SpendingBreakdown(categories: c.expenseCategories),
+                          TextButton(
+                            onPressed: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AllTransactionsPage(),
+                                ),
+                              );
+                              controller.loadAll();
+                            },
+                            child: const Text('See All'),
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 8),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Recent Transactions',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const AllTransactionsPage(),
+                      Expanded(
+                        child: c.transactions.isEmpty
+                            ? const _EmptyTransactions()
+                            : ListView.separated(
+                                itemCount: c.recentTransactions.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 4),
+                                itemBuilder: (context, index) {
+                                  final tx = c.recentTransactions[index];
+                                  return _TransactionTile(
+                                    tx: tx,
+                                    category: c.resolveCategory(tx),
+                                    onTap: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const AddTransactionPage(),
+                                        ),
+                                      );
+                                      controller.loadAll();
+                                    },
+                                  );
+                                },
                               ),
-                            );
-                            controller.loadAll();
-                          },
-                          child: const Text('See All'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    Expanded(
-                      child: c.transactions.isEmpty
-                          ? const _EmptyTransactions()
-                          : ListView.separated(
-                              itemCount: c.recentTransactions.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 4),
-                              itemBuilder: (context, index) {
-                                final tx = c.recentTransactions[index];
-                                return _TransactionTile(
-                                  tx: tx,
-                                  onTap: () async {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const AddTransactionPage(),
-                                      ),
-                                    );
-                                    controller.loadAll();
-                                  },
-                                );
-                              },
-                            ),
-                    ),
-                  ],
-                );
-              }),
+                      ),
+                    ],
+                  );
+                }),
               ),
             ],
           ),
@@ -300,13 +302,19 @@ class _SpendingBreakdown extends StatelessWidget {
 }
 
 class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({required this.tx, this.onTap});
+  const _TransactionTile({
+    required this.tx,
+    required this.category,
+    this.onTap,
+  });
 
   final TransactionModel tx;
+  final TransactionCategory category;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+  
     final isIncome = tx.type == 'income' || tx.type == 'INCOME';
     final sign = isIncome ? '+' : '-';
     final amount =
@@ -316,14 +324,14 @@ class _TransactionTile extends StatelessWidget {
       onTap: onTap,
       leading: CircleAvatar(
         backgroundColor: Colors.grey[100],
-        child: Text(tx.category.icon),
+        child: Text(category.icon),
       ),
       title: Text(
-        tx.note?.isNotEmpty == true ? tx.note! : tx.category.name,
+        tx.note?.isNotEmpty == true ? tx.note! : category.name,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        '${tx.category.name} · ${_dateLabel(tx.date)}',
+        '${category.name} · ${_dateLabel(tx.date)}',
         style: const TextStyle(fontSize: 12),
       ),
       trailing: Text(
@@ -339,8 +347,7 @@ class _TransactionTile extends StatelessWidget {
   String _typeLabel(String t) =>
       (t == 'income' || t == 'INCOME') ? 'Income' : 'Expense';
 
-  String _dateLabel(DateTime d) =>
-      '${d.day}/${d.month}/${d.year}';
+  String _dateLabel(DateTime d) => '${d.day}/${d.month}/${d.year}';
 }
 
 class _EmptyTransactions extends StatelessWidget {

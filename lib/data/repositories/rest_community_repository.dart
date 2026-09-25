@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../core/network/app_config.dart';
 import '../models/post_model.dart';
 import '../models/story_model.dart';
 import '../models/user_model.dart';
@@ -88,7 +89,7 @@ class RestCommunityRepository implements CommunityRepository {
     );
     final photoUrls = (data as Map<String, dynamic>)['photoUrls'] as List? ?? const [];
     if (photoUrls.isNotEmpty) {
-      return photoUrls.last as String;
+      return _resolveMediaUrl(photoUrls.last as String);
     }
     throw const ApiException(0, 'The photo could not be uploaded.');
   }
@@ -196,7 +197,10 @@ class RestCommunityRepository implements CommunityRepository {
       ),
       createdAt: _parseDate(json['createdAt']),
       caption: (json['content'] as String?) ?? '',
-      imagePaths: List<String>.from(json['photoUrls'] as List? ?? const []),
+      imagePaths: (json['photoUrls'] as List? ?? const [])
+          .whereType<String>()
+          .map(_resolveMediaUrl)
+          .toList(),
       likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
       likedByMe: json['likedByMe'] == true,
       commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
@@ -221,5 +225,16 @@ class RestCommunityRepository implements CommunityRepository {
   DateTime _parseDate(dynamic value) {
     if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
     return DateTime.now();
+  }
+
+  String _resolveMediaUrl(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    final base = AppConfig.apiBaseUrl.endsWith('/')
+        ? AppConfig.apiBaseUrl.substring(0, AppConfig.apiBaseUrl.length - 1)
+        : AppConfig.apiBaseUrl;
+    final relative = path.startsWith('/') ? path : '/$path';
+    return '$base$relative';
   }
 }

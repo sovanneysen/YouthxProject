@@ -18,37 +18,41 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: buildSimpleAppBar('Privacy'),
+      backgroundColor: context.bg,
+      appBar: buildSimpleAppBar(context, 'Privacy'),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Container(
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: Column(
               children: [
                 _switchTile(
+                  context,
                   'Private account',
                   'Only approved followers can see your posts',
                   _privateAccount,
                   (v) => setState(() => _privateAccount = v),
                 ),
-                _divider(),
+                _divider(context),
                 _switchTile(
+                  context,
                   'Show activity status',
                   'Let others see when you\'re active',
                   _showActivity,
                   (v) => setState(() => _showActivity = v),
                 ),
-                _divider(),
+                _divider(context),
                 _switchTile(
+                  context,
                   'Allow tagging',
                   'Others can tag you in posts',
                   _allowTagging,
                   (v) => setState(() => _allowTagging = v),
                 ),
-                _divider(),
+                _divider(context),
                 _switchTile(
+                  context,
                   'Share location',
                   'Show your city on your profile',
                   _showLocation,
@@ -59,12 +63,12 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
           ),
           const SizedBox(height: 16),
           Container(
-            decoration: cardDecoration(),
+            decoration: cardDecoration(context),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
               leading: const Icon(Icons.download_outlined, color: AppColors.primaryPurple),
-              title: const Text('Download your data', style: TextStyle(fontSize: 13.5)),
-              trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+              title: Text('Download your data', style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
+              trailing: Icon(Icons.chevron_right, color: context.textSecondaryColor),
               onTap: () {
                 // TODO: trigger a data export request to your backend.
               },
@@ -75,7 +79,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
     );
   }
 
-  Widget _switchTile(String title, String subtitle, bool value, ValueChanged<bool> onChanged) {
+  Widget _switchTile(BuildContext context, String title, String subtitle, bool value, ValueChanged<bool> onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Row(
@@ -84,9 +88,9 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500)),
+                Text(title, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500, color: context.textPrimaryColor)),
                 const SizedBox(height: 2),
-                Text(subtitle, style: TextStyle(fontSize: 11.5, color: Colors.grey.shade500)),
+                Text(subtitle, style: TextStyle(fontSize: 11.5, color: context.textSecondaryColor)),
               ],
             ),
           ),
@@ -96,5 +100,5 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
     );
   }
 
-  Widget _divider() => Divider(height: 1, color: Colors.grey.shade200, indent: 14, endIndent: 14);
+  Widget _divider(BuildContext context) => Divider(height: 1, color: context.borderColor, indent: 14, endIndent: 14);
 }
