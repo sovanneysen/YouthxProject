@@ -33,6 +33,40 @@ class _AddTaskModalState extends State<AddTaskModal> {
 
   bool get _isEditing => widget.existingTask != null;
 
+  // The picker is bounded to the same window the field has always used.
+  static final DateTime _minPickerDate = DateTime(2020);
+  static final DateTime _maxPickerDate = DateTime(2100);
+
+  /// True when the task currently carries a due date.
+  ///
+  /// Mirrors how the field is seeded, so a task stored as `'No date'` counts as
+  /// having no date and therefore shows no Clear action.
+  bool get _hasDueDate => _dateController.text.trim().isNotEmpty;
+
+  /// Midnight today, used as the picker's fallback opening date.
+  DateTime get _today {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  /// The date the picker should open on.
+  ///
+  /// `showDatePicker` asserts that [initialDate] lies inside the first/last
+  /// date window, so any out-of-range stored value is clamped rather than
+  /// trusted. An absent or unparseable value opens on today, which is also the
+  /// behaviour a freshly picked date gets when the picker is reopened.
+  DateTime get _initialPickerDate {
+    final today = _today;
+    final parsed = DateTime.tryParse(_dateController.text.trim());
+    if (parsed == null) return today;
+
+    // Compare on whole days: the stored value is a date with no time.
+    final candidate = DateTime(parsed.year, parsed.month, parsed.day);
+    if (candidate.isBefore(_minPickerDate)) return _minPickerDate;
+    if (candidate.isAfter(_maxPickerDate)) return _maxPickerDate;
+    return candidate;
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -43,16 +77,25 @@ class _AddTaskModalState extends State<AddTaskModal> {
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
+      initialDate: _initialPickerDate,
+      firstDate: _minPickerDate,
+      lastDate: _maxPickerDate,
     );
     if (picked != null) {
       // yyyy-MM-dd, matches your screenshot format
       _dateController.text =
           '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
-      setState(() {}); // refresh so the field visually updates
+      setState(() {}); // refresh so the field and Clear action update
     }
+  }
+
+  /// Empties the due-date field.
+  ///
+  /// Saving then falls through the path that already existed for a task with no
+  /// date, so nothing downstream needs to know the value was cleared.
+  void _clearDueDate() {
+    _dateController.clear();
+    setState(() {}); // hides the Clear action again
   }
 
   void _handleSave() {
@@ -152,13 +195,39 @@ class _AddTaskModalState extends State<AddTaskModal> {
             ),
             const SizedBox(height: 20),
 
-            Text(
-              'DUE DATE',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: context.textSecondaryColor,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'DUE DATE',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: context.textSecondaryColor,
+                  ),
+                ),
+                // Only meaningful while a date is set, so it stays hidden
+                // otherwise. Sized to the 48dp minimum tap target.
+                if (_hasDueDate)
+                  SizedBox(
+                    height: 48,
+                    child: TextButton(
+                      onPressed: _clearDueDate,
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      child: Text(
+                        'Clear date',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.textSecondaryColor,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             GestureDetector(
@@ -175,11 +244,16 @@ class _AddTaskModalState extends State<AddTaskModal> {
             ),
             const SizedBox(height: 24),
 
-            PrimaryButton(
-              label: _isEditing ? 'Update Task' : 'Save Task',
-              onPressed: _titleController.text.trim().isEmpty
-                  ? null
-                  : _handleSave,
+            // Listening to the controller is what makes the button react the
+            // moment the title changes: reading `_titleController.text` while
+            // building would only ever see the value from the last build, so
+            // typing would leave a stale enabled/disabled state behind.
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _titleController,
+              builder: (context, title, _) => PrimaryButton(
+                label: _isEditing ? 'Update Task' : 'Save Task',
+                onPressed: title.text.trim().isEmpty ? null : _handleSave,
+              ),
             ),
             const SizedBox(height: 8),
           ],
