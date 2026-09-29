@@ -7,17 +7,12 @@ class GoalModel {
   final GoalCategory category;
   final String? customCategoryLabel; // only used when category == other
   final String targetDate;
-  final double progress; // manual 0.0–1.0, used when NOT numeric-tracked
+
+  /// Manual progress, stored as a 0.0–1.0 fraction of 100%. The backend keeps
+  /// this as `progress_percent` (integer 0–100); the repository converts.
+  final double progress;
   final bool hasReminder;
   final String? reminderTime;
-
-  // --- Numeric tracking (NEW) ---
-  // When targetAmount is set, this goal is tracked by a real number
-  // (e.g. "Save $200/month" -> targetAmount: 200, unit: '$') instead of a
-  // manually-set percentage. Progress is then DERIVED, never stored raw.
-  final double? targetAmount;
-  final double? currentAmount;
-  final String? unit; // e.g. '$', 'km', 'pages', 'hrs'
 
   const GoalModel({
     required this.id,
@@ -29,38 +24,23 @@ class GoalModel {
     required this.progress,
     this.hasReminder = false,
     this.reminderTime,
-    this.targetAmount,
-    this.currentAmount,
-    this.unit,
   });
 
-  bool get isNumericTracked => targetAmount != null && targetAmount! > 0;
+  /// Progress as a 0.0–1.0 fraction, always clamped for display.
+  double get effectiveProgress => progress.clamp(0.0, 1.0);
 
-  double get effectiveProgress {
-    if (isNumericTracked) {
-      final ratio = (currentAmount ?? 0) / targetAmount!;
-      return ratio.clamp(0.0, 1.0);
-    }
-    return progress.clamp(0.0, 1.0);
-  }
+  // --- Compatibility shims -------------------------------------------------
+  // Numeric goal tracking (targetAmount/currentAmount/unit) was never
+  // persisted by the backend, so it silently lost data on every round-trip
+  // and has been removed. These three members remain only so that
+  // `views/overview/overview_view.dart` and `auth/views/home_screen.dart`,
+  // which are outside this batch's allowed scope, keep compiling. They carry
+  // no numeric state: nothing is ever tracked, labelled, or derived.
+  @Deprecated('Numeric goal tracking was removed; use progress instead.')
+  bool get isNumericTracked => false;
 
-  /// e.g. "$170 / $200" or "12 / 20 km" — null for non-numeric goals.
-  String? get amountLabel {
-    if (!isNumericTracked) return null;
-    final u = unit ?? '';
-    final current = _formatAmount(currentAmount ?? 0);
-    final target = _formatAmount(targetAmount!);
-    if (u == '\$' || u == '€' || u == '£') {
-      return '$u$current / $u$target';
-    }
-    return u.isEmpty ? '$current / $target' : '$current / $target $u';
-  }
-
-  static String _formatAmount(double value) {
-    return value == value.roundToDouble()
-        ? value.toInt().toString()
-        : value.toStringAsFixed(1);
-  }
+  @Deprecated('Numeric goal tracking was removed; use progress instead.')
+  String? get amountLabel => null;
 
   String get displayCategoryLabel {
     if (category == GoalCategory.other &&
@@ -79,10 +59,6 @@ class GoalModel {
     double? progress,
     bool? hasReminder,
     String? reminderTime,
-    double? targetAmount,
-    double? currentAmount,
-    String? unit,
-    bool clearNumericTracking = false,
   }) {
     return GoalModel(
       id: id,
@@ -94,13 +70,6 @@ class GoalModel {
       progress: progress ?? this.progress,
       hasReminder: hasReminder ?? this.hasReminder,
       reminderTime: reminderTime ?? this.reminderTime,
-      targetAmount: clearNumericTracking
-          ? null
-          : (targetAmount ?? this.targetAmount),
-      currentAmount: clearNumericTracking
-          ? null
-          : (currentAmount ?? this.currentAmount),
-      unit: clearNumericTracking ? null : (unit ?? this.unit),
     );
   }
 }

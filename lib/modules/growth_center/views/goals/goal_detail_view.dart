@@ -22,115 +22,121 @@ class _GoalDetailViewState extends State<GoalDetailView> {
     _goal = widget.goal;
   }
 
-  Future<void> _openLogProgressSheet() async {
-    final controller = TextEditingController();
-    final added = await showModalBottomSheet<double>(
+  /// The single manual progress editor. [initialPercent] is pre-filled with the
+  /// goal's stored percentage. A returned value means Save was tapped; null
+  /// means Cancel, in which case nothing is mutated and no API call is made.
+  Future<int?> _openEditProgressSheet(int initialPercent) {
+    var draft = initialPercent.clamp(0, 100);
+    return showModalBottomSheet<int>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+      builder: (sheetContext) {
+        final color = CategoryStyle.colorOf(_goal.category);
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          decoration: BoxDecoration(
+            color: sheetContext.cardBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-            decoration: BoxDecoration(
-              color: context.cardBg,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Log progress',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: context.textPrimaryColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'How much did you add towards "${_goal.title}"?',
-                  style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  style: TextStyle(color: context.textPrimaryColor),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'e.g. 20',
-                    hintStyle: TextStyle(color: context.textSecondaryColor.withValues(alpha: 0.5)),
-                    prefixText: _goal.unit == '\$' ? '\$ ' : null,
-                    prefixStyle: TextStyle(color: context.textPrimaryColor),
-                    suffixText: (_goal.unit != null && _goal.unit != '\$')
-                        ? _goal.unit
-                        : null,
-                    suffixStyle: TextStyle(color: context.textPrimaryColor),
-                    filled: true,
-                    fillColor: context.cardBgAlt,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
+          child: StatefulBuilder(
+            builder: (sheetContext, setSheetState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Edit Progress',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: sheetContext.textPrimaryColor,
                     ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: CategoryStyle.colorOf(_goal.category),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                  const SizedBox(height: 18),
+                  Text(
+                    '$draft%',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      color: sheetContext.textPrimaryColor,
+                    ),
+                  ),
+                  SliderTheme(
+                    data: SliderTheme.of(sheetContext).copyWith(
+                      activeTrackColor: color,
+                      thumbColor: color,
+                      overlayColor: color.withValues(alpha: 0.15),
+                    ),
+                    child: Slider(
+                      value: draft.toDouble(),
+                      min: 0,
+                      max: 100,
+                      divisions: 100,
+                      label: '$draft%',
+                      onChanged: (v) => setSheetState(() => draft = v.round()),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: sheetContext.textSecondaryColor,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    onPressed: () {
-                      final value = double.tryParse(controller.text.trim());
-                      Navigator.of(context).pop(value);
-                    },
-                    child: const Text(
-                      'Add',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          onPressed: () =>
+                              Navigator.of(sheetContext).pop(draft),
+                          child: const Text(
+                            'Save',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
+                ],
+              );
+            },
           ),
         );
       },
     );
+  }
 
-    if (added == null) return; // cancelled or invalid input
+  /// Sets progress to the value chosen in the editor (0-100). This is a manual
+  /// SET, never an accumulation. On Save the goal flows through the existing
+  /// `onUpdate` -> `GrowthController.updateGoal` -> `RestGrowthRepository
+  /// .updateGoal` -> PUT /goals/{id} path, and the controller replaces the
+  /// list entry with the server response.
+  Future<void> _handleEditProgress() async {
+    final saved = await _openEditProgressSheet(
+      (_goal.effectiveProgress * 100).round(),
+    );
+    if (saved == null || !mounted) return; // cancelled — nothing changes
 
-    final updatedCurrent = (_goal.currentAmount ?? 0) + added;
-    final reachedTarget =
-        _goal.targetAmount != null && updatedCurrent >= _goal.targetAmount!;
-
-    final updatedGoal = _goal.copyWith(currentAmount: updatedCurrent);
-
-    setState(() => _goal = updatedGoal);
-    widget.onUpdate?.call(updatedGoal);
-
-    if (reachedTarget && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('🎉 Goal reached — nice work!')),
-      );
-    }
+    final updated = _goal.copyWith(progress: (saved / 100).clamp(0.0, 1.0));
+    setState(() => _goal = updated);
+    widget.onUpdate?.call(updated);
   }
 
   @override
@@ -146,20 +152,7 @@ class _GoalDetailViewState extends State<GoalDetailView> {
         foregroundColor: context.textPrimaryColor,
         title: const Text('Goal Details'),
       ),
-      floatingActionButton: goal.isNumericTracked
-          ? FloatingActionButton.extended(
-              onPressed: _openLogProgressSheet,
-              backgroundColor: color,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Log Progress',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            )
-          : null,
+      floatingActionButton: null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -246,15 +239,24 @@ class _GoalDetailViewState extends State<GoalDetailView> {
                           color: context.textPrimaryColor,
                         ),
                       ),
-                      if (goal.isNumericTracked)
-                        Text(
-                          goal.amountLabel!,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: color,
-                          ),
-                        ),
                     ],
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _handleEditProgress,
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('Edit Progress'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: color,
+                        side: BorderSide(color: color.withValues(alpha: 0.5)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -286,7 +288,6 @@ class _GoalDetailViewState extends State<GoalDetailView> {
                 ],
               ),
             ),
-            if (goal.isNumericTracked) const SizedBox(height: 90),
           ],
         ),
       ),

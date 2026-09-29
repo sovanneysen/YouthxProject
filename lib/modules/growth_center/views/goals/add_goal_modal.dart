@@ -23,14 +23,16 @@ class _AddGoalModalState extends State<AddGoalModal> {
   final _dateController = TextEditingController();
 
   final _customCategoryController = TextEditingController();
-  final _targetAmountController = TextEditingController();
-  final _currentAmountController = TextEditingController();
-  final _unitController = TextEditingController();
+  final _reminderTimeController = TextEditingController();
 
   GoalCategory _selectedCategory = GoalCategory.health;
 
   bool _reminderEnabled = false;
-  bool _numericTrackingEnabled = false;
+
+  /// Time the daily reminder fires. 8:00 AM keeps the previous default, and an
+  /// edited goal starts from the time already stored on the backend.
+  static const _defaultReminder = TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay _reminderTime = _defaultReminder;
 
   bool get _isEditing => widget.existingGoal != null;
 
@@ -46,26 +48,46 @@ class _AddGoalModalState extends State<AddGoalModal> {
       _selectedCategory = existing.category;
       _customCategoryController.text = existing.customCategoryLabel ?? '';
       _reminderEnabled = existing.hasReminder;
-      if (existing.isNumericTracked) {
-        _numericTrackingEnabled = true;
-        _targetAmountController.text = _trimZero(existing.targetAmount!);
-        _currentAmountController.text = _trimZero(existing.currentAmount ?? 0);
-        _unitController.text = existing.unit ?? '';
-      }
+      final existingTime = _parseReminderTime(existing.reminderTime);
+      if (existingTime != null) _reminderTime = existingTime;
     }
+    _reminderTimeController.text = _formatReminderTime();
   }
 
-  static String _trimZero(double v) =>
-      v == v.roundToDouble() ? v.toInt().toString() : v.toString();
+  /// "08:00 AM" / "2:30 PM" (the repository's friendly form) -> [TimeOfDay].
+  static TimeOfDay? _parseReminderTime(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final match =
+        RegExp(r'^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$').firstMatch(value.trim());
+    if (match == null) return null;
+    var hour = int.tryParse(match.group(1)!) ?? _defaultReminder.hour;
+    final minute = int.tryParse(match.group(2)!) ?? 0;
+    final suffix = match.group(3)?.toUpperCase();
+    if (suffix == 'AM' && hour == 12) {
+      hour = 0;
+    } else if (suffix == 'PM' && hour != 12) {
+      hour += 12;
+    }
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  /// 12-hour friendly label the growth repository parses into the backend's
+  /// 24-hour `dailyReminderTime`.
+  String _formatReminderTime() {
+    final period = _reminderTime.period == DayPeriod.am ? 'AM' : 'PM';
+    final hour12 = _reminderTime.hourOfPeriod == 0
+        ? 12
+        : _reminderTime.hourOfPeriod;
+    return '${hour12.toString().padLeft(2, '0')}:'
+        '${_reminderTime.minute.toString().padLeft(2, '0')} $period';
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _dateController.dispose();
     _customCategoryController.dispose();
-    _targetAmountController.dispose();
-    _currentAmountController.dispose();
-    _unitController.dispose();
+    _reminderTimeController.dispose();
     super.dispose();
   }
 
@@ -84,19 +106,21 @@ class _AddGoalModalState extends State<AddGoalModal> {
     }
   }
 
+  Future<void> _pickReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _reminderTime,
+    );
+    if (picked == null) return;
+    if (!mounted) return;
+    setState(() {
+      _reminderTime = picked;
+      _reminderTimeController.text = _formatReminderTime();
+    });
+  }
+
   void _handleSave() {
     if (_nameController.text.trim().isEmpty) return;
-
-    final targetAmount = _numericTrackingEnabled
-        ? double.tryParse(_targetAmountController.text.trim())
-        : null;
-    final currentAmount = _numericTrackingEnabled
-        ? (double.tryParse(_currentAmountController.text.trim()) ?? 0)
-        : null;
-
-    // Numeric tracking only "counts" if a valid target > 0 was entered —
-    // otherwise fall back to manual progress so we never divide by zero.
-    final isValidNumeric = targetAmount != null && targetAmount > 0;
 
     widget.onSave(
       GoalModel(
@@ -113,13 +137,12 @@ class _AddGoalModalState extends State<AddGoalModal> {
         targetDate: _dateController.text.isEmpty
             ? 'No date'
             : _dateController.text,
-        progress:
-            widget.existingGoal?.progress ?? 0.0, // preserve progress on edit
+        // A new goal starts at 0%. Progress is edited from Goal Detail, which
+        // is the only place the manual progress editor lives. An edit must
+        // not silently reset the stored percentage.
+        progress: widget.existingGoal?.progress ?? 0.0,
         hasReminder: _reminderEnabled,
-        reminderTime: _reminderEnabled ? '8:00 AM' : null,
-        targetAmount: isValidNumeric ? targetAmount : null,
-        currentAmount: isValidNumeric ? currentAmount : null,
-        unit: isValidNumeric ? _unitController.text.trim() : null,
+        reminderTime: _reminderEnabled ? _formatReminderTime() : null,
       ),
     );
     Navigator.of(context).pop();
@@ -209,58 +232,28 @@ class _AddGoalModalState extends State<AddGoalModal> {
                       ),
                       const SizedBox(height: 18),
                       ToggleSettingRow(
-                        title: 'Track with a number',
-                        subtitle:
-                            'e.g. "Save \$200" or "Run 20km" — progress updates automatically',
-                        value: _numericTrackingEnabled,
-                        onChanged: (v) =>
-                            setState(() => _numericTrackingEnabled = v),
+                        title: 'Daily Reminder',
+                        subtitle: _reminderEnabled
+                            ? 'Get notified at ${_formatReminderTime()}'
+                            : 'Turn on to get a daily nudge',
+                        value: _reminderEnabled,
+                        onChanged: (v) => setState(() => _reminderEnabled = v),
                       ),
-                      if (_numericTrackingEnabled) ...[
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: LabeledTextField(
-                                label: 'TARGET AMOUNT',
-                                hint: '200',
-                                controller: _targetAmountController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                hintText: '',
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: LabeledTextField(
-                                label: 'UNIT',
-                                hint: '\$, km, pages...',
-                                controller: _unitController,
-                                hintText: '',
-                              ),
-                            ),
-                          ],
-                        ),
+                      if (_reminderEnabled) ...[
                         const SizedBox(height: 12),
                         LabeledTextField(
-                          label: 'STARTING AMOUNT (OPTIONAL)',
-                          hint: '0',
-                          controller: _currentAmountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
+                          label: 'REMINDER TIME',
+                          hint: '8:00 AM',
+                          controller: _reminderTimeController,
+                          readOnly: true,
+                          onTap: _pickReminderTime,
+                          suffixIcon: const Icon(
+                            Icons.access_time_outlined,
+                            size: 18,
                           ),
                           hintText: '',
                         ),
                       ],
-                      const SizedBox(height: 18),
-                      ToggleSettingRow(
-                        title: 'Daily Reminder',
-                        subtitle: 'Get notified at 8:00 AM',
-                        value: _reminderEnabled,
-                        onChanged: (v) => setState(() => _reminderEnabled = v),
-                      ),
                       const SizedBox(height: 18),
                       const TipBanner(
                         text:

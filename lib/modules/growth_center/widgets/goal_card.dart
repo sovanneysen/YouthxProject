@@ -88,17 +88,6 @@ class GoalCard extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             GoalProgressBar(progress: goal.effectiveProgress, color: color),
-            if (goal.isNumericTracked) ...[
-              const SizedBox(height: 6),
-              Text(
-                goal.amountLabel!,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: context.textSecondaryColor,
-                ),
-              ),
-            ],
             if (goal.hasReminder) ...[
               const SizedBox(height: 10),
               Row(

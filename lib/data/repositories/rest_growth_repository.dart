@@ -28,9 +28,8 @@ import 'growth_repository.dart';
 ///   DELETE /todos/{id}       -> 204
 ///
 /// Not persisted by the backend (schema has no columns):
-///   - Goal numeric tracking (targetAmount/currentAmount/unit)
 ///   - Task scheduledHour
-/// These fields round-trip to the nearest supported representation.
+/// This field round-trips to the nearest supported representation.
 class RestGrowthRepository implements GrowthRepository {
   RestGrowthRepository({ApiProvider? apiProvider})
     : _api = apiProvider ?? ApiProvider();
@@ -264,13 +263,26 @@ class RestGrowthRepository implements GrowthRepository {
     return '${_pad(h12)}:${_pad(minute)} $suffix';
   }
 
+  /// Friendly 12-hour label ("02:30 PM") -> the backend's 24-hour
+  /// `dailyReminderTime` ("14:30:00"). A value without a meridiem is already
+  /// 24-hour and passes through unchanged.
   String? _reminderTime(String? friendly) {
     if (friendly == null || friendly.isEmpty) return null;
-    final match = RegExp(r'^(\d{1,2}):(\d{2})').firstMatch(friendly);
+    final match = RegExp(
+      r'^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?$',
+    ).firstMatch(friendly.trim());
     if (match == null) return null;
-    final hour = int.tryParse(match.group(1)!) ?? 0;
+    var hour = int.tryParse(match.group(1)!) ?? 0;
     final minute = int.tryParse(match.group(2)!) ?? 0;
-    return '${_pad(hour)}:${_pad(minute)}:00';
+    final second = int.tryParse(match.group(3) ?? '') ?? 0;
+    final suffix = match.group(4)?.toUpperCase();
+    if (suffix == 'AM') {
+      hour = hour % 12; // 12 AM -> 00
+    } else if (suffix == 'PM' && hour < 12) {
+      hour += 12; // 02 PM -> 14, 12 PM stays 12
+    }
+    if (hour > 23 || minute > 59 || second > 59) return null;
+    return '${_pad(hour)}:${_pad(minute)}:${_pad(second)}';
   }
 
   String? _parseDateOrNull(String value) {
