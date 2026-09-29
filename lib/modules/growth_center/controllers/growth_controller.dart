@@ -10,6 +10,12 @@ import '../models/task_model.dart';
 /// Manages the Growth Center's three lists (goals, habits, tasks) backed by
 /// the real Draft Backend.
 class GrowthController extends GetxController {
+  // Sub-tab order used by GrowthView's tab bar.
+  static const int tabGoals = 0;
+  static const int tabHabits = 1;
+  static const int tabToDo = 2;
+  static const int tabOverview = 3;
+
   final GrowthRepository repository;
 
   GrowthController({required this.repository});
@@ -19,6 +25,11 @@ class GrowthController extends GetxController {
   final RxList<TaskModel> tasks = <TaskModel>[].obs;
   final RxBool loading = true.obs;
   final RxnString error = RxnString();
+
+  /// Index of the sub-tab [GrowthView] is showing. Lives here rather than in
+  /// the view so other screens (e.g. the Home "View all habits" shortcut) can
+  /// open a specific tab without pushing a second Growth screen.
+  final RxInt activeTab = tabGoals.obs;
 
   @override
   void onInit() {
@@ -127,7 +138,11 @@ class GrowthController extends GetxController {
       final updated = value
           ? await repository.completeHabit(habit)
           : await repository.uncompleteHabit(habit);
-      if (index < habits.length) habits[index] = updated;
+      // Re-locate by id after the await. The index captured above can be
+      // stale if the list changed while the request was in flight, which
+      // would otherwise write this habit's result onto a neighbour.
+      final current = habits.indexWhere((h) => h.id == updated.id);
+      if (current != -1) habits[current] = updated;
     } catch (e) {
       _showError('Could not update the habit', e);
     }
@@ -174,6 +189,7 @@ class GrowthController extends GetxController {
       priority: task.priority,
       dueDate: task.dueDate,
       isCompleted: value ?? false,
+      scheduledHour: task.scheduledHour,
     );
     try {
       await repository.updateTask(updated);
