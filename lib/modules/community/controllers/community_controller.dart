@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../auth/controllers/auth_controller.dart';
 import '../../../core/network/api_client.dart';
@@ -59,6 +60,19 @@ class CommunityController extends GetxController {
     feedError.value = null;
     try {
       final data = await repository.fetchFeed();
+
+      // Restore locally persisted saved state.
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final key = 'youthx_saved_posts_$currentUserId';
+        final savedIds = prefs.getStringList(key) ?? <String>[];
+        for (final post in data) {
+          if (savedIds.contains(post.id)) {
+            post.savedByMe = true;
+          }
+        }
+      } catch (_) {}
+
       posts.assignAll(data);
     } catch (e) {
       posts.clear();
@@ -163,11 +177,35 @@ class CommunityController extends GetxController {
     final previous = post.savedByMe;
     post.savedByMe = !previous;
     posts.refresh();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'youthx_saved_posts_$currentUserId';
+      final savedIds = prefs.getStringList(key) ?? <String>[];
+      if (post.savedByMe) {
+        if (!savedIds.contains(post.id)) savedIds.add(post.id);
+      } else {
+        savedIds.remove(post.id);
+      }
+      await prefs.setStringList(key, savedIds);
+    } catch (_) {}
+
     try {
       await repository.toggleSave(post.id);
     } catch (e) {
       post.savedByMe = previous;
       posts.refresh();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final key = 'youthx_saved_posts_$currentUserId';
+        final savedIds = prefs.getStringList(key) ?? <String>[];
+        if (previous) {
+          if (!savedIds.contains(post.id)) savedIds.add(post.id);
+        } else {
+          savedIds.remove(post.id);
+        }
+        await prefs.setStringList(key, savedIds);
+      } catch (_) {}
       _showError(e, 'Could not save this post.');
     }
   }

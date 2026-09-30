@@ -15,11 +15,13 @@ import '../../community/views/widgets/post_card.dart';
 import '../controllers/profile_data_controller.dart';
 import '../profile_model.dart';
 import 'edit_profile_screen.dart';
+import 'followers_screen.dart';
+import 'following_screen.dart';
 import 'help_support_screen.dart';
 import 'notifications_screen.dart';
 import 'privacy_screen.dart';
 import 'settings_screen.dart';
-
+import '../mock_social_data.dart';
 /// Profile tab.
 ///
 /// The header identity, the statistics, and the "My posts" list are all read
@@ -373,8 +375,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Obx(() {
       final imagePath = _profile.imagePath;
       final initials = _profile.initials;
+      final hasPosts = _profile.myPosts.isNotEmpty;
 
-      return Container(
+      Widget avatar = Container(
         width: 88,
         height: 88,
         decoration: BoxDecoration(
@@ -398,7 +401,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ) : null,
       );
+
+      if (hasPosts) {
+        avatar = GestureDetector(
+          onTap: () {
+            final latestPost = _profile.myPosts.first;
+            _showPostPreviewDialog(latestPost);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: SweepGradient(
+                colors: [
+                  primaryPurple,
+                  gradientPurple,
+                  Color(0xFFF59E0B), // accentOrange
+                  Color(0xFFEF4444), // accentRed
+                  primaryPurple,
+                ],
+              ),
+            ),
+            child: avatar,
+          ),
+        );
+      }
+
+      return avatar;
     });
+  }
+
+  void _showPostPreviewDialog(PostModel post) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: _cardDecoration(),
+              padding: const EdgeInsets.all(12),
+              child: PostCard(
+                post: post,
+                isOwner: true,
+                onLike: () {},
+                onComment: () {},
+                onSave: () {},
+                onShare: () {},
+                onEdit: () {},
+                onDelete: () {},
+                onAuthorTap: () {},
+              ),
+            ),
+            const SizedBox(height: 16),
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 32),
+              onPressed: () => Navigator.pop(context),
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   // ---------------- IDENTITY ----------------
@@ -505,31 +570,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildStatsRow() {
     return Obx(() {
-      final growthLoading = _profile.growthLoading;
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _statItem('${_profile.postCount}', 'Posts'),
-          _statItem(growthLoading ? '—' : '${_profile.goalCount}', 'Goals'),
-          _statItem(growthLoading ? '—' : '${_profile.streakDays}', 'Streak'),
+          _statItem('${_profile.postCount}', 'Posts', null),
+          _statItem('—', 'Followers', () => Get.to(() => const FollowersScreen())),
+          _statItem('—', 'Following', () => Get.to(() => const FollowingScreen())),
         ],
       );
     });
   }
 
-  Widget _statItem(String value, String label) {
-    return Column(
-      children: [
-        Text(value,
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: context.textPrimaryColor)),
-        const SizedBox(height: 2),
-        Text(label,
-            style:
-                TextStyle(fontSize: 13, color: context.textSecondaryColor)),
-      ],
+  Widget _statItem(String value, String label, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Text(value,
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: context.textPrimaryColor)),
+          const SizedBox(height: 2),
+          Text(label,
+              style:
+                  TextStyle(fontSize: 13, color: context.textSecondaryColor)),
+        ],
+      ),
     );
   }
 

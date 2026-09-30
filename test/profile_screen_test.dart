@@ -35,16 +35,14 @@ class FakeAuthRepository extends AuthRepository {
   Future<LoginResponseModel> login({
     required String email,
     required String password,
-  }) async =>
-      LoginResponseModel(token: 'jwt', user: _user);
+  }) async => LoginResponseModel(token: 'jwt', user: _user);
 
   @override
   Future<AuthUserModel> register({
     required String email,
     required String password,
     required String fullName,
-  }) async =>
-      _user;
+  }) async => _user;
 
   static final _user = AuthUserModel(
     id: 'u-me',
@@ -85,15 +83,19 @@ void main() {
   late GrowthController growth;
   late ProfileDataController profile;
 
-  PostModel post(String id, String authorId, {bool saved = false, bool shared = false}) =>
-      PostModel(
-        id: id,
-        author: UserModel(id: authorId, name: 'Alex Johnson'),
-        createdAt: DateTime(2026, 1, 1),
-        caption: 'caption $id',
-        savedByMe: saved,
-        sharedByMe: shared,
-      );
+  PostModel post(
+    String id,
+    String authorId, {
+    bool saved = false,
+    bool shared = false,
+  }) => PostModel(
+    id: id,
+    author: UserModel(id: authorId, name: 'Alex Johnson'),
+    createdAt: DateTime(2026, 1, 1),
+    caption: 'caption $id',
+    savedByMe: saved,
+    sharedByMe: shared,
+  );
 
   Future<void> boot(
     WidgetTester tester, {
@@ -113,8 +115,10 @@ void main() {
       auth.currentUser.value = FakeAuthRepository._user;
     }
     Get.put<ThemeController>(ThemeController(), permanent: true);
-    Get.put<ApiProvider>(ApiProvider(tokenStore: MemoryTokenStore()),
-        permanent: true);
+    Get.put<ApiProvider>(
+      ApiProvider(tokenStore: MemoryTokenStore()),
+      permanent: true,
+    );
 
     community = CommunityController(repository: MockCommunityRepository());
     Get.put<CommunityController>(community, permanent: true);
@@ -140,22 +144,22 @@ void main() {
   }
 
   GoalModel goal(String id) => GoalModel(
-        id: id,
-        emoji: 'G',
-        title: 'Goal $id',
-        category: GoalCategory.learning,
-        targetDate: '2026-12-31',
-        progress: 0.5,
-      );
+    id: id,
+    emoji: 'G',
+    title: 'Goal $id',
+    category: GoalCategory.learning,
+    targetDate: '2026-12-31',
+    progress: 0.5,
+  );
 
   HabitModel habit(String id, int streak) => HabitModel(
-        id: id,
-        emoji: 'H',
-        title: 'Habit $id',
-        frequency: HabitFrequency.daily,
-        streak: streak,
-        color: const Color(0xFF6366F1),
-      );
+    id: id,
+    emoji: 'H',
+    title: 'Habit $id',
+    frequency: HabitFrequency.daily,
+    streak: streak,
+    color: const Color(0xFF6366F1),
+  );
 
   Future<void> pumpProfile(WidgetTester tester) async {
     await tester.pumpWidget(const GetMaterialApp(home: ProfileScreen()));
@@ -173,12 +177,16 @@ void main() {
     expect(find.text('Alex Johnson'), findsNWidgets(2));
     expect(find.text('alex@university.edu'), findsOneWidget);
     expect(
-      find.textContaining('Member since ${DateFormat.yMMM().format(DateTime(2025, 3, 4))}'),
+      find.textContaining(
+        'Member since ${DateFormat.yMMM().format(DateTime(2025, 3, 4))}',
+      ),
       findsOneWidget,
     );
   });
 
-  testWidgets('shows real post, goal and streak counts', (tester) async {
+  testWidgets('shows real post count and placeholder follower/following', (
+    tester,
+  ) async {
     await boot(
       tester,
       posts: [post('p1', me), post('p2', me), post('p3', 'someone-else')],
@@ -189,13 +197,13 @@ void main() {
 
     // Only the two posts authored by the signed-in user are counted.
     expect(find.text('2'), findsWidgets);
-    expect(find.text('Goals'), findsOneWidget);
-    expect(find.text('Streak'), findsOneWidget);
-    expect(find.text('9'), findsOneWidget);
+    expect(find.text('Followers'), findsOneWidget);
+    expect(find.text('Following'), findsOneWidget);
   });
 
-  testWidgets('lists only the signed-in user posts in My posts',
-      (tester) async {
+  testWidgets('lists only the signed-in user posts in My posts', (
+    tester,
+  ) async {
     await boot(tester, posts: [post('p1', me), post('p9', 'someone-else')]);
     await pumpProfile(tester);
 
@@ -211,8 +219,7 @@ void main() {
     expect(find.textContaining('show up here'), findsOneWidget);
   });
 
-  testWidgets('saved tab explains the session-only behaviour',
-      (tester) async {
+  testWidgets('saved tab explains the session-only behaviour', (tester) async {
     await boot(tester, posts: [post('p1', me)]);
     await pumpProfile(tester);
 
@@ -223,8 +230,7 @@ void main() {
     expect(find.textContaining('this session only'), findsOneWidget);
   });
 
-  testWidgets('shared tab explains the session-only behaviour',
-      (tester) async {
+  testWidgets('shared tab explains the session-only behaviour', (tester) async {
     await boot(tester, posts: [post('p1', me)]);
     await pumpProfile(tester);
 
@@ -246,14 +252,12 @@ void main() {
     expect(find.text('No saved posts'), findsNothing);
   });
 
-  testWidgets('no placeholder follower or following counts remain',
-      (tester) async {
+  testWidgets('Followers and Following show — as empty states', (tester) async {
     await boot(tester);
     await pumpProfile(tester);
 
-    expect(find.text('Followers'), findsNothing);
-    expect(find.text('Following'), findsNothing);
-    expect(find.text('128'), findsNothing);
-    expect(find.text('36'), findsNothing);
+    expect(find.text('Followers'), findsOneWidget);
+    expect(find.text('Following'), findsOneWidget);
+    expect(find.text('—'), findsWidgets);
   });
 }
