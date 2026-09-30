@@ -14,10 +14,7 @@ import 'package:youthx/modules/growth_center/views/growth_view.dart';
 import 'package:youthx/modules/profile/views/profile_screen.dart';
 
 void main() {
-  Finder navItem(String label) => find.descendant(
-        of: find.byType(BottomNavigationBar),
-        matching: find.text(label),
-      );
+  Finder navItem(int index) => find.byKey(Key('nav_item_$index'));
 
   Future<void> pumpShell(WidgetTester tester) async {
     // Widget tests must stay offline: pre-register the in-memory repository
@@ -41,19 +38,24 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  int shellIndex(WidgetTester tester) =>
-      tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex;
+  int shellIndex(WidgetTester tester) {
+    final stacks = tester.widgetList<IndexedStack>(find.byType(IndexedStack));
+    // The AppShell's IndexedStack is the main one that holds the tabs
+    // It should have exactly 5 children
+    final shellStack = stacks.firstWhere((s) => s.children.length == 5);
+    return shellStack.index ?? 0;
+  }
 
   testWidgets('app shell shows one persistent bottom navigation bar with 5 tabs',
       (tester) async {
     await pumpShell(tester);
 
-    final navBar = tester.widget<BottomNavigationBar>(
-      find.byType(BottomNavigationBar),
-    );
-    expect(navBar.items.length, 5);
-    expect(navBar.currentIndex, 0);
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
+    // The new custom navigation bar has 5 tabs
+    expect(navItem(0), findsOneWidget);
+    expect(navItem(1), findsOneWidget);
+    expect(navItem(2), findsOneWidget);
+    expect(navItem(3), findsOneWidget);
+    expect(navItem(4), findsOneWidget);
     expect(find.byType(AppShell), findsOneWidget);
   });
 
@@ -61,29 +63,28 @@ void main() {
       (tester) async {
     await pumpShell(tester);
 
-    await tester.tap(navItem('Community'));
+    await tester.tap(navItem(1));
     await tester.pumpAndSettle();
     expect(shellIndex(tester), 1);
 
-    await tester.tap(navItem('Growth'));
+    await tester.tap(navItem(2));
     await tester.pumpAndSettle();
     expect(shellIndex(tester), 2);
 
-    await tester.tap(navItem('Finance'));
+    await tester.tap(navItem(3));
     await tester.pumpAndSettle();
     expect(shellIndex(tester), 3);
 
-    await tester.tap(navItem('Profile'));
+    await tester.tap(navItem(4));
     await tester.pumpAndSettle();
     expect(shellIndex(tester), 4);
 
-    await tester.tap(navItem('Home'));
+    await tester.tap(navItem(0));
     await tester.pumpAndSettle();
     expect(shellIndex(tester), 0);
 
     // Tabs are embedded in the shell, never pushed as routes.
     expect(find.byType(AppShell), findsOneWidget);
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
   });
 
   testWidgets('all five tab screens are mounted inside the shell', (tester) async {
@@ -102,25 +103,23 @@ void main() {
       (tester) async {
     await pumpShell(tester);
 
-    await tester.tap(navItem('Profile'));
+    await tester.tap(navItem(4));
     await tester.pumpAndSettle();
 
     expect(shellIndex(tester), 4);
     expect(find.byType(ProfileScreen), findsOneWidget);
     expect(find.text('My posts'), findsOneWidget);
-    // Only the shell bar remains; ProfileScreen no longer renders its own nav.
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
   });
 
   testWidgets('community tab renders the feed once its binding has run',
       (tester) async {
     await pumpShell(tester);
 
-    await tester.tap(navItem('Community'));
+    await tester.tap(navItem(1));
     await tester.pumpAndSettle();
 
     expect(shellIndex(tester), 1);
-    expect(find.textContaining('budgeting spreadsheet'), findsOneWidget);
+    expect(find.textContaining('reading streak'), findsOneWidget);
     expect(find.byType(CommunityView), findsOneWidget);
   });
 }

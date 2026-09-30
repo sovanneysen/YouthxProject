@@ -208,7 +208,20 @@ class _ImagesPreview extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: Image.file(File(path), width: 96, height: 96, fit: BoxFit.cover),
+                  child: Image.file(
+                    File(path),
+                    width: 96,
+                    height: 96,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 96,
+                        height: 96,
+                        color: Colors.grey.withOpacity(0.1),
+                        child: const Icon(Icons.broken_image, color: Colors.grey),
+                      );
+                    },
+                  ),
                 ),
                 Positioned(
                   right: 4,

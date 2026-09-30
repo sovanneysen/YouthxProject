@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -128,27 +129,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.only(bottom: 24),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeader(),
-                        Transform.translate(
-                          offset: const Offset(0, -50),
-                          child: Column(
+                        _buildTopBar(),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
                             children: [
                               _buildAvatar(),
-                              const SizedBox(height: 14),
-                              _buildIdentity(),
-                              const SizedBox(height: 20),
-                              _buildStatsCard(),
-                              const SizedBox(height: 16),
-                              _buildTabs(),
-                              const SizedBox(height: 12),
-                              // Wrapped in Obx so the list reacts to community
-                              // and growth updates, and so the loading spinner
-                              // is replaced once the feed resolves.
-                              Obx(() => _buildPostsList()),
+                              const SizedBox(width: 20),
+                              Expanded(child: _buildStatsRow()),
                             ],
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _buildIdentity(),
+                        ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _buildActionButtons(),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildTabs(),
+                        const SizedBox(height: 12),
+                        // Wrapped in Obx so the list reacts to community
+                        // and growth updates, and so the loading spinner
+                        // is replaced once the feed resolves.
+                        Obx(() => _buildPostsList()),
                       ],
                     ),
                   ),
@@ -177,51 +188,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ---------------- HEADER ----------------
 
-  Widget _buildHeader() {
-    return Container(
-      height: 170,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [gradientBlue, gradientPurple],
-        ),
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Positioned(top: -30, left: -20, child: _blurCircle(90)),
-          Positioned(bottom: -20, right: 30, child: _blurCircle(60)),
-          Positioned(
-            top: 14,
-            right: 14,
-            child: GestureDetector(
-              onTap: () => setState(() => _menuOpen = !_menuOpen),
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.22),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.menu, color: Colors.white, size: 20),
+          Obx(() {
+            final name = _profile.displayName;
+            return Text(
+              name.isEmpty ? 'YOUTHX' : name,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
-            ),
+            );
+          }),
+          GestureDetector(
+            onTap: () => setState(() => _menuOpen = !_menuOpen),
+            child: const Icon(Icons.menu, size: 28),
           ),
         ],
       ),
     );
   }
 
-  Widget _blurCircle(double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.08),
-      ),
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const EditProfileScreen())),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Edit profile', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ),
+      ],
     );
   }
 
@@ -364,43 +370,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // ---------------- AVATAR ----------------
 
   Widget _buildAvatar() {
-    return Container(
-      width: 96,
-      height: 96,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: context.cardBg,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Container(
-        decoration: const BoxDecoration(
+    return Obx(() {
+      final imagePath = _profile.imagePath;
+      final initials = _profile.initials;
+
+      return Container(
+        width: 88,
+        height: 88,
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: LinearGradient(
+          color: context.cardBg,
+          gradient: imagePath == null ? const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [gradientBlue, primaryPurple],
-          ),
+          ) : null,
+          image: imagePath != null ? DecorationImage(
+            image: FileImage(File(imagePath)),
+            fit: BoxFit.cover,
+          ) : null,
         ),
-        child: Center(
-          child: Obx(
-            // Real initials from the session name, falling back to a neutral
-            // glyph when no name is available.
-            () => Text(
-              _profile.initials.isEmpty ? '?' : _profile.initials,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
-            ),
+        child: imagePath == null ? Center(
+          child: Text(
+            initials.isEmpty ? '?' : initials,
+            style: const TextStyle(
+                color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
           ),
-        ),
-      ),
-    );
+        ) : null,
+      );
+    });
   }
 
   // ---------------- IDENTITY ----------------
@@ -415,44 +413,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final hasLocalName = _profile.hasLocalName;
 
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             name.isEmpty ? 'YOUTHX member' : name,
-            textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: context.textPrimaryColor,
             ),
           ),
           if (email.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 2),
             Text(
               email,
-              textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 14, color: context.textSecondaryColor),
+              style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
             ),
           ],
           if (location.isNotEmpty || memberSince != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _buildMetaRow(location: location, memberSince: memberSince),
           ],
           if (hasLocalName) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _buildLocalNameNote(),
           ],
           if (bio.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               bio,
-              textAlign: TextAlign.center,
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
+              style: TextStyle(fontSize: 14, color: context.textPrimaryColor),
             ),
           ],
         ],
@@ -470,15 +466,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (memberSince != null) {
       parts.add('Member since ${DateFormat.yMMM().format(memberSince)}');
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Text(
-        parts.join(' · '),
-        textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
-      ),
+    return Text(
+      parts.join(' · '),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
     );
   }
 
@@ -511,40 +503,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ---------------- STATS ----------------
 
-  /// Real counts derived from the community and growth controllers.
-  ///
-  /// A dash is shown while the underlying list is still loading, so a pending
-  /// request is never displayed as a real zero.
-  Widget _buildStatsCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      decoration: _cardDecoration(),
-      child: Obx(() {
-        final growthLoading = _profile.growthLoading;
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _statItem('${_profile.postCount}', 'Posts'),
-            _statDivider(),
-            _statItem(growthLoading ? '—' : '${_profile.goalCount}', 'Goals'),
-            _statDivider(),
-            _statItem(growthLoading ? '—' : '${_profile.streakDays}', 'Streak'),
-          ],
-        );
-      }),
-    );
+  Widget _buildStatsRow() {
+    return Obx(() {
+      final growthLoading = _profile.growthLoading;
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _statItem('${_profile.postCount}', 'Posts'),
+          _statItem(growthLoading ? '—' : '${_profile.goalCount}', 'Goals'),
+          _statItem(growthLoading ? '—' : '${_profile.streakDays}', 'Streak'),
+        ],
+      );
+    });
   }
-
-  Widget _statDivider() =>
-      Container(width: 1, height: 36, color: context.borderColor);
 
   Widget _statItem(String value, String label) {
     return Column(
       children: [
         Text(value,
             style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: context.textPrimaryColor)),
         const SizedBox(height: 2),

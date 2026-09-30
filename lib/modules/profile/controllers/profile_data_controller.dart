@@ -95,12 +95,25 @@ class ProfileDataController extends GetxController {
   /// blank profile clears the stored record instead of keeping an empty one.
   Future<void> saveLocalProfile({
     String? displayName,
+    String? imagePath,
     String bio = '',
     String location = '',
+    String username = '',
+    String pronouns = '',
+    String links = '',
+    String gender = '',
   }) async {
     final profile =
-        LocalProfile(displayName: displayName, bio: bio, location: location)
-            .normalized();
+        LocalProfile(
+          displayName: displayName,
+          imagePath: imagePath ?? localProfile.value.imagePath,
+          bio: bio,
+          location: location,
+          username: username,
+          pronouns: pronouns,
+          links: links,
+          gender: gender,
+        ).normalized();
     // Invalidate any read still in flight so it cannot clobber this write.
     _revision++;
     localProfile.value = profile;
@@ -131,8 +144,13 @@ class ProfileDataController extends GetxController {
   /// Registration date from the session; null when the API omitted it.
   DateTime? get memberSince => _auth?.currentUser.value?.createdAt;
 
+  String? get imagePath => localProfile.value.imagePath;
   String get bio => localProfile.value.trimmedBio;
   String get location => localProfile.value.trimmedLocation;
+  String get username => localProfile.value.trimmedUsername;
+  String get pronouns => localProfile.value.trimmedPronouns;
+  String get links => localProfile.value.trimmedLinks;
+  String get gender => localProfile.value.trimmedGender;
 
   /// Avatar initials derived from the real name. Returns '' when no name is
   /// available so the view can render its own neutral placeholder.

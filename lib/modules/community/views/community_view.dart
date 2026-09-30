@@ -69,11 +69,17 @@ class CommunityView extends GetView<CommunityController> {
                 sliver: SliverToBoxAdapter(child: _FilterChips()),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                 sliver: Obx(() {
-                  if (controller.isSearching) {
+                  if (controller.isSearching && controller.peopleResults.isNotEmpty) {
                     return _peopleResults(controller);
                   }
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                }),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                sliver: Obx(() {
                   if (controller.loading.value) {
                     return const SliverToBoxAdapter(
                       child: Padding(
@@ -137,11 +143,6 @@ class CommunityView extends GetView<CommunityController> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        onPressed: () => Get.to(() => const CreatePostView()),
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -413,7 +414,7 @@ class _SearchBar extends GetView<CommunityController> {
         onChanged: controller.setSearch,
         style: TextStyle(color: context.textPrimaryColor),
         decoration: InputDecoration(
-          hintText: 'Search people...',
+          hintText: 'Search...',
           hintStyle: TextStyle(color: context.textSecondaryColor),
           prefixIcon:
               Icon(Icons.search, color: context.textSecondaryColor, size: 20),

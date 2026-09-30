@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../controllers/profile_data_controller.dart';
 import 'app_colors.dart';
@@ -19,8 +21,11 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _pronounsController = TextEditingController();
   final _bioController = TextEditingController();
-  final _locationController = TextEditingController();
+  final _linksController = TextEditingController();
+  final _genderController = TextEditingController();
 
   bool _saving = false;
 
@@ -40,15 +45,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final profile = _profile;
     if (profile == null) return;
     _nameController.text = profile.displayName;
+    _usernameController.text = profile.username;
+    _pronounsController.text = profile.pronouns;
     _bioController.text = profile.bio;
-    _locationController.text = profile.location;
+    _linksController.text = profile.links;
+    _genderController.text = profile.gender;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
+    _pronounsController.dispose();
     _bioController.dispose();
-    _locationController.dispose();
+    _linksController.dispose();
+    _genderController.dispose();
     super.dispose();
   }
 
@@ -63,7 +74,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     await profile.saveLocalProfile(
       displayName: name.isEmpty ? null : name,
       bio: _bioController.text,
-      location: _locationController.text,
+      username: _usernameController.text,
+      pronouns: _pronounsController.text,
+      links: _linksController.text,
+      gender: _genderController.text,
     );
 
     if (!mounted) return;
@@ -78,26 +92,74 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.bg,
-      appBar: buildSimpleAppBar(context, 'Edit Profile'),
+      appBar: buildSimpleAppBar(context, 'Edit profile'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: _buildAvatar()),
-            const SizedBox(height: 28),
-            _label(context, 'Display name'),
-            _textField(
-              context,
-              _nameController,
-              hint: 'Leave blank to use your account name',
+            Center(
+              child: Column(
+                children: [
+                  _buildAvatar(),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _pickImage,
+                    child: const Text(
+                      'Edit picture or avatar',
+                      style: TextStyle(
+                        color: AppColors.primaryPurple,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            _igTextField(context, _nameController, 'Name'),
+            const SizedBox(height: 8),
+            _igTextField(context, _usernameController, 'Username'),
+            const SizedBox(height: 8),
+            _igTextField(context, _pronounsController, 'Pronouns'),
+            const SizedBox(height: 8),
+            _igTextField(context, _bioController, 'Bio', maxLines: 2),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Links', style: TextStyle(fontSize: 16, color: context.textPrimaryColor)),
+                  Text('Add link', style: TextStyle(fontSize: 14, color: context.textSecondaryColor)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Banners', style: TextStyle(fontSize: 16, color: context.textPrimaryColor)),
+                      Text('Add music, profiles and more.', style: TextStyle(fontSize: 13, color: context.textSecondaryColor)),
+                    ],
+                  ),
+                  Text('1', style: TextStyle(fontSize: 14, color: context.textSecondaryColor)),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
-            _label(context, 'Bio'),
-            _textField(context, _bioController, maxLines: 3),
+            _igTextField(context, _genderController, 'Gender', showDropdown: true),
             const SizedBox(height: 16),
-            _label(context, 'Location'),
-            _textField(context, _locationController),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Text('Reorder grid', style: TextStyle(fontSize: 16, color: context.textPrimaryColor)),
+            ),
             const SizedBox(height: 16),
             _buildLocalOnlyNote(),
             const SizedBox(height: 28),
@@ -121,7 +183,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       )
                     : const Text('Save changes',
-                        style: TextStyle(color: Colors.white)),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -130,28 +192,87 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  /// Real initials on the same gradient used by the Profile header.
+  /// Real initials on the same gradient used by the Profile header, or local photo.
   Widget _buildAvatar() {
-    final profile = _profile;
-    final initials = profile?.initials ?? '';
+    return Obx(() {
+      final profile = _profile;
+      final initials = profile?.initials ?? '';
+      final imagePath = profile?.imagePath;
 
-    return Container(
-      width: 90,
-      height: 90,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [AppColors.gradientBlue, AppColors.primaryPurple],
+      return GestureDetector(
+        onTap: _pickImage,
+        child: Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: imagePath == null ? const LinearGradient(
+              colors: [AppColors.gradientBlue, AppColors.primaryPurple],
+            ) : null,
+            image: imagePath != null ? DecorationImage(
+              image: FileImage(File(imagePath)),
+              fit: BoxFit.cover,
+            ) : null,
+          ),
+          child: imagePath == null ? Center(
+            child: Text(
+              initials.isEmpty ? '?' : initials,
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+            ),
+          ) : null,
         ),
+      );
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: context.cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Center(
-        child: Text(
-          initials.isEmpty ? '?' : initials,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Camera'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
         ),
       ),
     );
+
+    if (source == null) return;
+
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: source, imageQuality: 85);
+    if (file != null) {
+      final profile = _profile;
+      if (profile != null) {
+        // Save immediately to reflect dynamically across the app.
+        // We preserve current text field inputs so they aren't lost.
+        final name = _nameController.text.trim();
+        await profile.saveLocalProfile(
+          displayName: name.isEmpty ? null : name,
+          imagePath: file.path,
+          bio: _bioController.text,
+          username: _usernameController.text,
+          pronouns: _pronounsController.text,
+          links: _linksController.text,
+          gender: _genderController.text,
+        );
+      }
+    }
   }
 
   /// States plainly that these fields are not sent to the server.
@@ -183,39 +304,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _label(BuildContext context, String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child:
-            Text(text, style: TextStyle(fontSize: 12, color: context.textSecondaryColor)),
-      );
-
-  Widget _textField(
+  Widget _igTextField(
     BuildContext context,
-    TextEditingController controller, {
+    TextEditingController controller,
+    String label, {
     int maxLines = 1,
-    String? hint,
+    bool showDropdown = false,
   }) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      style: TextStyle(color: context.textPrimaryColor, fontSize: 14),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: context.cardBgAlt,
-        hintText: hint,
-        hintStyle: TextStyle(color: context.textSecondaryColor, fontSize: 13),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: context.borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: context.borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primaryPurple),
+    return Container(
+      decoration: BoxDecoration(
+        color: context.cardBgAlt.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.borderColor.withOpacity(0.2)),
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: TextStyle(color: context.textPrimaryColor, fontSize: 16),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: context.textSecondaryColor, fontSize: 14),
+          floatingLabelStyle: TextStyle(color: context.textSecondaryColor, fontSize: 12),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          suffixIcon: showDropdown
+              ? Icon(Icons.keyboard_arrow_down, color: context.textSecondaryColor)
+              : null,
         ),
       ),
     );

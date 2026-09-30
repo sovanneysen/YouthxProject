@@ -10,13 +10,25 @@ class LocalProfile {
   /// showing the real `fullName` from the auth session".
   final String? displayName;
 
+  /// Optional local device path to the selected profile image.
+  final String? imagePath;
+
   final String bio;
   final String location;
+  final String username;
+  final String pronouns;
+  final String links;
+  final String gender;
 
   const LocalProfile({
     this.displayName,
+    this.imagePath,
     this.bio = '',
     this.location = '',
+    this.username = '',
+    this.pronouns = '',
+    this.links = '',
+    this.gender = '',
   });
 
   static const LocalProfile empty = LocalProfile();
@@ -29,12 +41,18 @@ class LocalProfile {
 
   String get trimmedBio => bio.trim();
   String get trimmedLocation => location.trim();
+  String get trimmedUsername => username.trim();
+  String get trimmedPronouns => pronouns.trim();
+  String get trimmedLinks => links.trim();
+  String get trimmedGender => gender.trim();
 
   bool get hasBio => trimmedBio.isNotEmpty;
   bool get hasLocation => trimmedLocation.isNotEmpty;
+  bool get hasImage => imagePath != null && imagePath!.isNotEmpty;
 
   /// True when nothing is worth storing, so the store can drop the record.
-  bool get isEmpty => localName == null && !hasBio && !hasLocation;
+  bool get isEmpty => localName == null && !hasBio && !hasLocation && !hasImage &&
+      trimmedUsername.isEmpty && trimmedPronouns.isEmpty && trimmedLinks.isEmpty && trimmedGender.isEmpty;
 
   /// Name to render: the local override when set, otherwise [fallback] from
   /// the authenticated session. Returns '' when neither is available, so the
@@ -48,19 +66,34 @@ class LocalProfile {
   /// Drops whitespace-only input so it is never stored as a real value.
   LocalProfile normalized() => LocalProfile(
         displayName: localName,
+        imagePath: imagePath,
         bio: trimmedBio,
         location: trimmedLocation,
+        username: trimmedUsername,
+        pronouns: trimmedPronouns,
+        links: trimmedLinks,
+        gender: trimmedGender,
       );
 
   factory LocalProfile.fromJson(Map<String, dynamic> json) => LocalProfile(
         displayName: json['displayName'] as String?,
+        imagePath: json['imagePath'] as String?,
         bio: json['bio'] as String? ?? '',
         location: json['location'] as String? ?? '',
+        username: json['username'] as String? ?? '',
+        pronouns: json['pronouns'] as String? ?? '',
+        links: json['links'] as String? ?? '',
+        gender: json['gender'] as String? ?? '',
       );
 
   Map<String, dynamic> toJson() => {
         'displayName': displayName,
+        'imagePath': imagePath,
         'bio': bio,
         'location': location,
+        'username': username,
+        'pronouns': pronouns,
+        'links': links,
+        'gender': gender,
       };
 }

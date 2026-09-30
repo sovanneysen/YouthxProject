@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -61,8 +62,16 @@ class _AppShellState extends State<AppShell> {
     setState(() => _index = _communityTab);
   }
 
+  /// Home's avatar tap shortcut: switch the existing shell to Profile.
+  void _openProfileTab() {
+    if (!mounted) return;
+    setState(() => _index = 4);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: IndexedStack(
         index: _index,
@@ -70,6 +79,7 @@ class _AppShellState extends State<AppShell> {
           HomeScreen(
             onViewAllHabits: _openHabitsTab,
             onSeeAllCommunity: _openCommunityTab,
+            onAvatarTap: _openProfileTab,
           ),
           const CommunityView(),
           const GrowthView(),
@@ -77,25 +87,98 @@ class _AppShellState extends State<AppShell> {
           const ProfileScreen(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) => setState(() => _index = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.groups), label: 'Community'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.track_changes),
-            label: 'Growth',
+      bottomNavigationBar: Container(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: SafeArea(
+          bottom: true,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Container(
+              height: 60,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF242526) : Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: AnimatedAlign(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      alignment: Alignment(-1.0 + (_index * 0.5), 0),
+                      child: FractionallySizedBox(
+                        widthFactor: 0.2,
+                        child: Center(
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.15)
+                                  : Colors.black.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      _buildNavItem(0, Icons.home_rounded, Icons.home_outlined),
+                      _buildNavItem(1, Icons.groups_rounded, Icons.groups_outlined),
+                      _buildNavItem(2, Icons.track_changes_rounded, Icons.track_changes_outlined),
+                      _buildNavItem(3, Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_outlined),
+                      _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet),
-            label: 'Finance',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData selectedIcon, IconData unselectedIcon) {
+    final isSelected = _index == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? Colors.white : Colors.black;
+    final inactiveColor = isDark ? Colors.white54 : Colors.black54;
+
+    return Expanded(
+      child: GestureDetector(
+        key: Key('nav_item_$index'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => setState(() => _index = index),
+        child: SizedBox(
+          height: 60,
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (child, animation) {
+                return ScaleTransition(
+                  scale: animation,
+                  child: child,
+                );
+              },
+              child: Icon(
+                isSelected ? selectedIcon : unselectedIcon,
+                key: ValueKey<bool>(isSelected),
+                color: isSelected ? activeColor : inactiveColor,
+                size: 28,
+              ),
+            ),
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+        ),
       ),
     );
   }

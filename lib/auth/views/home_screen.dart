@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -53,10 +54,14 @@ class HomeScreen extends StatefulWidget {
   /// Switch the surrounding [AppShell] to the Community tab.
   final VoidCallback? onSeeAllCommunity;
 
+  /// Switch the surrounding [AppShell] to the Profile tab.
+  final VoidCallback? onAvatarTap;
+
   const HomeScreen({
     super.key,
     this.onViewAllHabits,
     this.onSeeAllCommunity,
+    this.onAvatarTap,
   });
 
   @override
@@ -229,49 +234,58 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: Row(
-            children: [
-              Obx(
-                () => CircleAvatar(
-                  backgroundColor: const Color(0xFF4A6CF7),
-                  child: Text(
-                    _initials,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Obx(
-                  () => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_greeting()} 👋',
-                        style: TextStyle(
-                            fontSize: 12, color: context.textSecondaryColor),
+          child: GestureDetector(
+            onTap: widget.onAvatarTap,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                Obx(() {
+                  final imagePath = _profile?.imagePath;
+                  return Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF4A6CF7),
+                      image: imagePath != null ? DecorationImage(
+                        image: FileImage(File(imagePath)),
+                        fit: BoxFit.cover,
+                      ) : null,
+                    ),
+                    child: imagePath == null ? Center(
+                      child: Text(
+                        _initials,
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
-                      Text(
-                        _displayName.isEmpty ? 'YOUTHX member' : _displayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    ) : null,
+                  );
+                }),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Obx(
+                    () => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_greeting()} 👋',
+                          style: TextStyle(
+                              fontSize: 12, color: context.textSecondaryColor),
                         ),
-                      ),
-                      Text(
-                        _firstName == null
-                            ? _progressSubtitle()
-                            : '$_firstName, ${_progressSubtitle()}',
-                        style: TextStyle(
-                            fontSize: 11, color: context.textSecondaryColor),
-                      ),
-                    ],
+                        Text(
+                          _displayName.isEmpty ? 'YOUTHX member' : _displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         const SizedBox(width: 8),

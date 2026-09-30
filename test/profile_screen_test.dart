@@ -169,7 +169,8 @@ void main() {
     await boot(tester);
     await pumpProfile(tester);
 
-    expect(find.text('Alex Johnson'), findsOneWidget);
+    // The name appears twice: once in the top bar, once in the identity section.
+    expect(find.text('Alex Johnson'), findsNWidgets(2));
     expect(find.text('alex@university.edu'), findsOneWidget);
     expect(
       find.textContaining('Member since ${DateFormat.yMMM().format(DateTime(2025, 3, 4))}'),

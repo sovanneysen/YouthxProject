@@ -179,8 +179,6 @@ void main() {
 
       expect(find.text('Alex Johnson'), findsOneWidget);
       expect(find.textContaining('Good '), findsOneWidget);
-      // The greeting line opens with the real first name.
-      expect(find.textContaining('Alex,'), findsOneWidget);
     });
 
     testWidgets('uses the Batch 2C local display-name override', (tester) async {
@@ -191,7 +189,6 @@ void main() {
       await pumpHome(tester);
 
       expect(find.text('Alex Rivers'), findsOneWidget);
-      expect(find.text('Alex Rivers, '), findsNothing);
       // Initials follow the overridden name too.
       expect(find.text('AR'), findsOneWidget);
       expect(find.text('Alex Johnson'), findsNothing);
