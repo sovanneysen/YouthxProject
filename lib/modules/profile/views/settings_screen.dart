@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
+/// Settings sub-page opened from the Profile menu.
+///
+/// Only settings that are genuinely implemented appear here. The Language,
+/// Currency, Account security, and Storage rows were removed because their tap
+/// handlers were empty TODOs, so they looked selectable while doing nothing and
+/// the Currency row advertised a hardcoded British-pound label that no code
+/// reads. They
+/// are intentionally absent until real support exists; do not re-add a row
+/// without a working destination. The working light/dark toggle stays in the
+/// Profile menu where `ThemeController` is already wired up.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -14,21 +24,6 @@ class SettingsScreen extends StatelessWidget {
         children: [
           Container(
             decoration: cardDecoration(context),
-            child: Column(
-              children: [
-                _tile(context, Icons.language, 'Language', 'English'),
-                _divider(context),
-                _tile(context, Icons.attach_money, 'Currency', 'GBP (£)'),
-                _divider(context),
-                _tile(context, Icons.lock_outline, 'Account security', ''),
-                _divider(context),
-                _tile(context, Icons.storage_outlined, 'Storage and data', ''),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            decoration: cardDecoration(context),
             child: _tile(context, Icons.info_outline, 'About', 'v1.0.0'),
           ),
         ],
@@ -36,25 +31,17 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  /// Display-only row. There is no `onTap` and no trailing chevron, so the row
+  /// does not advertise a detail screen that does not exist.
   Widget _tile(BuildContext context, IconData icon, String title, String value) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       leading: Icon(icon, color: AppColors.primaryPurple),
       title: Text(title, style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (value.isNotEmpty)
-            Text(value, style: TextStyle(fontSize: 12.5, color: context.textSecondaryColor)),
-          const SizedBox(width: 4),
-          Icon(Icons.chevron_right, color: context.textSecondaryColor),
-        ],
+      trailing: Text(
+        value,
+        style: TextStyle(fontSize: 12.5, color: context.textSecondaryColor),
       ),
-      onTap: () {
-        // TODO: navigate to a detail screen or open a picker for this setting.
-      },
     );
   }
-
-  Widget _divider(BuildContext context) => Divider(height: 1, color: context.borderColor, indent: 14, endIndent: 14);
 }
