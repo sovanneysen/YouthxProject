@@ -6,8 +6,16 @@ import '../widgets/loading_indicator.dart';
 import '../controllers/finance_controller.dart';
 import 'add_transaction_page.dart';
 import 'all_transactions_page.dart';
+import 'all_saving_goals_page.dart';
+import 'saving_goal_detail_page.dart';
+import 'saving_goal_form_page.dart';
+import 'transaction_detail_page.dart';
+import '../widgets/category_breakdown.dart';
+import '../widgets/saving_goal_card.dart';
+import '../widgets/saving_goal_deposit_sheet.dart';
 import '../models/transaction_model.dart';
 import '../../../core/theme/app_theme.dart';
+// ignore: duplicate_import
 import '../models/transaction_model.dart';
 
 /// Finance home — real data driven by [FinanceController].
@@ -79,8 +87,13 @@ class FinanceHomePage extends GetView<FinanceController> {
                   final income = controller.totalIncome;
                   final expense = controller.totalExpense;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // The page is a single scroll view rather than a Column
+                  // with an Expanded transaction list. Adding the Saving Goals
+                  // strip made the fixed content taller than the space left
+                  // by the bottom nav on short screens, which overflowed.
+                  // `recentTransactions` is capped at 4 items, so rendering
+                  // them inline costs nothing.
+                  return ListView(
                     children: [
                       // Balance card
                       Container(
@@ -140,7 +153,8 @@ class FinanceHomePage extends GetView<FinanceController> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Spending breakdown
+                      // Category breakdown — totals computed from the real
+                      // loaded transactions via FinanceController.
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -152,16 +166,99 @@ class FinanceHomePage extends GetView<FinanceController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Spending Breakdown',
+                              'Category Breakdown',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 12),
-                            _SpendingBreakdown(categories: c.expenseCategories),
+                            CategoryBreakdown(
+                              expenseRows: c.expenseTotals,
+                              incomeRows: c.incomeTotals,
+                              totalExpense: c.totalExpense,
+                              totalIncome: c.totalIncome,
+                            ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Saving goals — a preview of the first few goals.
+                      // Reads the same reactive list the goals list and detail
+                      // screens use, so deposits made here or elsewhere show
+                      // up without a manual refresh.
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Saving Goals',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AllSavingGoalsPage(),
+                                ),
+                              );
+                            },
+                            child: const Text('See All'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 150,
+                        child: c.savingGoals.isEmpty
+                            ? _EmptySavingGoals(
+                                onCreate: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SavingGoalFormPage(),
+                                    ),
+                                  );
+                                },
+                              )
+                            : ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: c.savingGoals.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(width: 12),
+                                itemBuilder: (context, index) {
+                                  final goal = c.savingGoals[index];
+                                  return SizedBox(
+                                    width: 280,
+                                    child: SavingGoalCard(
+                                      goal: goal,
+                                      onTap: () async {
+                                        await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                SavingGoalDetailPage(
+                                              goalId: goal.id,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      onDeposit: () async {
+                                        await SavingGoalDepositSheet.submit(
+                                          context,
+                                          goal,
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
                       ),
                       const SizedBox(height: 16),
 
@@ -177,6 +274,10 @@ class FinanceHomePage extends GetView<FinanceController> {
                           ),
                           TextButton(
                             onPressed: () async {
+                              // No reload on return: edits and deletes made in
+                              // the detail screen are already applied to the
+                              // reactive `transactions` list, so a reload here
+                              // would only add a loading flash.
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -184,7 +285,6 @@ class FinanceHomePage extends GetView<FinanceController> {
                                       const AllTransactionsPage(),
                                 ),
                               );
-                              controller.loadAll();
                             },
                             child: const Text('See All'),
                           ),
@@ -192,32 +292,36 @@ class FinanceHomePage extends GetView<FinanceController> {
                       ),
                       const SizedBox(height: 8),
 
-                      Expanded(
-                        child: c.transactions.isEmpty
-                            ? const _EmptyTransactions()
-                            : ListView.separated(
-                                itemCount: c.recentTransactions.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 4),
-                                itemBuilder: (context, index) {
-                                  final tx = c.recentTransactions[index];
-                                  return _TransactionTile(
-                                    tx: tx,
-                                    category: c.resolveCategory(tx),
-                                    onTap: () async {
-                                      await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const AddTransactionPage(),
-                                        ),
-                                      );
-                                      controller.loadAll();
-                                    },
-                                  );
-                                },
-                              ),
-                      ),
+                      if (c.transactions.isEmpty)
+                        const _EmptyTransactions()
+                      else
+                        ...c.recentTransactions.asMap().entries.map((entry) {
+                          final tx = entry.value;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: _TransactionTile(
+                              tx: tx,
+                              category: c.resolveCategory(tx),
+                              onTap: () async {
+                                // Open the real detail flow (view / edit /
+                                // delete). Edit and delete mutate the same
+                                // `transactions` list this page observes, so
+                                // the tile and the totals above it update
+                                // without an extra reload.
+                                await Navigator.push<bool>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        TransactionDetailPage(
+                                      transactionId: tx.id,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        }),
+                      const SizedBox(height: 16),
                     ],
                   );
                 }),
@@ -264,39 +368,65 @@ class FinanceHomePage extends GetView<FinanceController> {
   }
 }
 
-class _SpendingBreakdown extends StatelessWidget {
-  const _SpendingBreakdown({required this.categories});
+/// Placeholder shown in the home Saving Goals strip when the user has no
+/// goals yet, so the section is never a blank gap.
+class _EmptySavingGoals extends StatelessWidget {
+  const _EmptySavingGoals({required this.onCreate});
 
-  final List<TransactionCategory> categories;
+  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
-    if (categories.isEmpty) {
-      return const Text(
-        'No categories yet. Add a transaction to get started.',
-        style: TextStyle(color: Colors.grey, fontSize: 13),
-      );
-    }
-    final visible = categories.take(4).toList();
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        for (final cat in visible)
-          Column(
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.grey[100],
-                child: Text(cat.icon, style: const TextStyle(fontSize: 20)),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                cat.name,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-            ],
+    // Kept as a single compact row: the strip this sits in is height-constrained,
+    // so a stacked empty state would overflow.
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.savings_outlined, size: 24, color: Colors.blue),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'No saving goals yet',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                Text(
+                  'Track what you are saving for.',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textSecondaryColor,
+                  ),
+                ),
+              ],
+            ),
           ),
-      ],
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: onCreate,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            child: const Text('Create'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -314,11 +444,13 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  
+
     final isIncome = tx.type == 'income' || tx.type == 'INCOME';
     final sign = isIncome ? '+' : '-';
+    // ignore: unused_local_variable
     final amount =
         '\u0024${NumberFormat('#,##0.00').format(tx.amount.toDouble())}';
+    // ignore: unused_local_variable
     final label = _typeLabel(tx.type);
     return ListTile(
       onTap: onTap,

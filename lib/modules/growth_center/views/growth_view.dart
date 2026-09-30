@@ -33,8 +33,6 @@ class _GrowthScreen extends StatefulWidget {
 }
 
 class _GrowthScreenState extends State<_GrowthScreen> {
-  int _activeTab = 0;
-
   final _tabs = const [
     GrowthTab(emoji: '🎯', label: 'Goals', activeColor: Color(0xFF6366F1)),
     GrowthTab(emoji: '🔥', label: 'Habits', activeColor: Color(0xFFF97316)),
@@ -60,19 +58,22 @@ class _GrowthScreenState extends State<_GrowthScreen> {
           children: [
             Container(
               color: context.cardBg,
-              child: Column(
-                children: [
-                  GrowthHeader(
-                    badgeEmoji: _badgeEmojis[_activeTab],
-                    badgeBackground: _badgeColors[_activeTab],
-                  ),
-                  GrowthTabBar(
-                    tabs: _tabs,
-                    activeIndex: _activeTab,
-                    onTabSelected: (i) => setState(() => _activeTab = i),
-                  ),
-                ],
-              ),
+              child: Obx(() {
+                final activeTab = controller.activeTab.value;
+                return Column(
+                  children: [
+                    GrowthHeader(
+                      badgeEmoji: _badgeEmojis[activeTab],
+                      badgeBackground: _badgeColors[activeTab],
+                    ),
+                    GrowthTabBar(
+                      tabs: _tabs,
+                      activeIndex: activeTab,
+                      onTabSelected: (i) => controller.activeTab.value = i,
+                    ),
+                  ],
+                );
+              }),
             ),
             Expanded(child: _buildBody(controller)),
           ],
@@ -92,11 +93,12 @@ class _GrowthScreenState extends State<_GrowthScreen> {
         return _ErrorView(message: error, onRetry: controller.loadAll);
       }
 
+      final activeTab = controller.activeTab.value;
       final goals = List<GoalModel>.from(controller.goals);
       final habits = List<HabitModel>.from(controller.habits);
       final tasks = List<TaskModel>.from(controller.tasks);
       return IndexedStack(
-        index: _activeTab,
+        index: activeTab,
         children: [
           GoalsView(
             goals: goals,
@@ -119,12 +121,6 @@ class _GrowthScreenState extends State<_GrowthScreen> {
             onToggle: (t, v) => controller.toggleTask(t, v),
           ),
           OverviewView(goals: goals, habits: habits, tasks: tasks),
-          const Center(
-            child: Text(
-              'Overview — coming next',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
         ],
       );
     });

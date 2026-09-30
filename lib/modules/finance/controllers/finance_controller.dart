@@ -97,6 +97,7 @@ class FinanceController extends GetxController {
       transactions.take(4).toList();
 
   // * Map category amount negative for display helper
+  // ignore: unused_element
   String _formatAmount(TransactionModel t) {
     final sign = t.type == 'income' ? '+' : '-';
     return '$sign\$${t.amount.abs().toStringAsFixed(2)}';
@@ -110,14 +111,66 @@ class FinanceController extends GetxController {
     for (final c in pool) {
       if (c.id == t.category.id) return c;
     }
-    
+
     // Fallback: search the other pool in case of data mismatch (e.g. old mock IDs)
     final otherPool = isIncome ? expenseCategories : incomeCategories;
     for (final c in otherPool) {
       if (c.id == t.category.id) return c;
     }
-    
+
     return t.category;
+  }
+
+  // ── Real category breakdown ─────────────────────────────────────────────
+  // Totals are derived from the transactions already loaded from
+  // `GET /expenses`. There is no extra endpoint, no extra state and no
+  // fabricated percentage: the bar width is `total / totalExpense` (or
+  // `totalIncome`) computed at render time.
+
+  /// Expense totals per category, from the loaded transactions.
+  List<CategoryTotal> get expenseTotals => _totalsFor(isIncome: false);
+
+  /// Income totals per category, from the loaded transactions.
+  List<CategoryTotal> get incomeTotals => _totalsFor(isIncome: true);
+
+  List<CategoryTotal> _totalsFor({required bool isIncome}) {
+    // The backend stores ONE shared category list; a transaction's `type`
+    // column is what separates income from expense, so that is the grouping
+    // key used here (never the display colour).
+    final buckets = <String, _CategoryAccumulator>{};
+    for (final t in transactions) {
+      if ((t.type.toLowerCase() == 'income') != isIncome) continue;
+      // Prefer the backend id; fall back to the name so a category row with
+      // no id still groups together instead of splitting into duplicates.
+      final key = t.category.id?.toString() ?? 'name:${t.category.name}';
+      final bucket =
+          buckets.putIfAbsent(key, () => _CategoryAccumulator(t.category));
+      bucket.count++;
+      bucket.total += t.amount.abs();
+    }
+
+    // Resolve each bucket through the loaded category list so the row shows
+    // the icon-bearing copy rather than the transaction's minimal stub.
+    final pool = isIncome ? incomeCategories : expenseCategories;
+    final rows = buckets.values.map((bucket) {
+      final resolved = pool.firstWhereOrNull(
+            (c) => c.id != null && c.id == bucket.category.id,
+          ) ??
+          bucket.category;
+      return CategoryTotal(
+        category: resolved,
+        count: bucket.count,
+        total: bucket.total,
+      );
+    }).toList()
+      // Largest contributor first; name breaks ties so the order is stable.
+      ..sort((a, b) {
+        final byTotal = b.total.compareTo(a.total);
+        return byTotal != 0
+            ? byTotal
+            : a.category.name.compareTo(b.category.name);
+      });
+    return rows;
   }
 
   // * Create a transaction through the repository and refresh.
@@ -209,4 +262,37 @@ class FinanceController extends GetxController {
   }
 
   void clearError() => error.value = null;
+}
+
+/// One row of the category breakdown shown on the Finance screen.
+///
+/// Every value is a pure function of the transactions already loaded from the
+/// backend, so the bar can be sized from real totals rather than a guess.
+class CategoryTotal {
+  final TransactionCategory category;
+  final int count;
+  final double total;
+
+  const CategoryTotal({
+    required this.category,
+    required this.count,
+    required this.total,
+  });
+
+  /// This category's share of [groupTotal] as a 0.0–1.0 fraction.
+  ///
+  /// Guarded on a positive group total so a category-less account renders an
+  /// empty bar instead of dividing by zero, and clamped so rounding can never
+  /// produce a bar wider than its track.
+  double shareOf(double groupTotal) =>
+      groupTotal <= 0 ? 0.0 : (total / groupTotal).clamp(0.0, 1.0);
+}
+
+/// Mutable counter used while folding the transaction list into rows.
+class _CategoryAccumulator {
+  final TransactionCategory category;
+  int count = 0;
+  double total = 0;
+
+  _CategoryAccumulator(this.category);
 }

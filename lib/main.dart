@@ -29,4 +29,3 @@ class YouthXApp extends StatelessWidget {
     );
   }
 }
-

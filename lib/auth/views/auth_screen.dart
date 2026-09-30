@@ -6,9 +6,7 @@ import '../../data/providers/api_provider.dart';
 import '../../routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
 
-// ==================================================================
 // 3. AUTH SCREEN (Sign Up / Sign In toggle)
-// ==================================================================
 // auth_screen.dart
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -288,20 +286,22 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
 
-              if (!isSignUp) ...[
+              // No self-service password recovery exists: the app has no reset
+              // endpoint, no reset token, and no way to send an email. This is
+              // stated as plain text rather than a link, because a tappable
+              // "Forgot password?" that did nothing was the misleading part.
+              if (!isSignUp)
                 Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Forgot password?',
-                      style: TextStyle(
-                        color: isDark ? const Color(0xFF6B8AFF) : const Color(0xFF4A6CF7),
-                      ),
+                  child: Text(
+                    'Password reset is not currently available.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: isDark ? AppColors.textSecondaryDark : Colors.grey.shade600,
                     ),
                   ),
-                ),
-              ] else
+                )
+              else
                 const SizedBox(height: 20),
 
               const SizedBox(height: 8),
@@ -333,31 +333,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   );
                 }),
-              ),
-              const SizedBox(height: 16),
-
-              OutlinedButton.icon(
-                onPressed: () {
-                  // This is where you'd trigger Google Sign-In —
-                  // that account picker screen is OS-provided, not built by you.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Would open Google Sign-In here'),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                label: const Text('Continue with Google'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: isDark ? AppColors.textPrimaryDark : Colors.black87,
-                  side: BorderSide(
-                    color: isDark ? AppColors.borderDark : Colors.grey.shade300,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
               ),
               const SizedBox(height: 12),
             ],

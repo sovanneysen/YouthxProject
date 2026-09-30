@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/finance_controller.dart';
+import 'transaction_detail_page.dart';
 
 class AllTransactionsPage extends StatelessWidget {
   const AllTransactionsPage({super.key});
@@ -42,63 +44,83 @@ class AllTransactionsPage extends StatelessWidget {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: txs.length,
-          itemBuilder: (context, index) {
-            final tx = txs[index];
-            final category = controller.resolveCategory(tx);
-            final isIncome = tx.type.toLowerCase() == 'income';
-            final sign = isIncome ? '+' : '-';
-            final amountStr =
-                '$sign\$${NumberFormat('#,##0.00').format(tx.amount.abs())}';
-            final dateStr =
-                '${tx.date.day}/${tx.date.month}/${tx.date.year}';
-            final subtitle = '${category.name} · $dateStr';
-            final title =
-                tx.note?.isNotEmpty == true ? tx.note! : category.name;
+        return RefreshIndicator(
+          // `transactions` already holds every page the repository merged, so
+          // "load more" is a plain refresh rather than a new pagination path.
+          onRefresh: controller.loadAll,
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            // AlwaysScrollable so pull-to-refresh works even on a short list.
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: txs.length,
+            itemBuilder: (context, index) {
+              final tx = txs[index];
+              final category = controller.resolveCategory(tx);
+              final isIncome = tx.type.toLowerCase() == 'income';
+              final sign = isIncome ? '+' : '-';
+              final amountStr =
+                  '$sign\$${NumberFormat('#,##0.00').format(tx.amount.abs())}';
+              final dateStr =
+                  '${tx.date.day}/${tx.date.month}/${tx.date.year}';
+              final subtitle = '${category.name} · $dateStr';
+              final title =
+                  tx.note?.isNotEmpty == true ? tx.note! : category.name;
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                color: context.cardBg,
-                borderRadius: BorderRadius.circular(12),
-                border: context.isDark
-                    ? Border.all(color: context.borderColor)
-                    : null,
-              ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: context.cardBgAlt,
-                  child: Text(category.icon),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: context.cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: context.isDark
+                      ? Border.all(color: context.borderColor)
+                      : null,
                 ),
-                title: Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimaryColor,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: context.cardBgAlt,
+                    child: Text(category.icon),
                   ),
-                ),
-                subtitle: Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.textSecondaryColor,
+                  title: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimaryColor,
+                    ),
                   ),
-                ),
-                trailing: Text(
-                  amountStr,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isIncome ? Colors.green : context.textPrimaryColor,
+                  subtitle: Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondaryColor,
+                    ),
                   ),
+                  trailing: Text(
+                    amountStr,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isIncome
+                          ? AppColors.success
+                          : context.textPrimaryColor,
+                    ),
+                  ),
+                  // Opens the same detail/edit flow as the Finance home, and
+                  // the row rebuilds in place when the transaction changes.
+                  onTap: () async {
+                    await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionDetailPage(
+                          transactionId: tx.id,
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                onTap: () {
-                  // TODO: open pre-filled edit screen when edit flow is ready
-                },
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       }),
     );

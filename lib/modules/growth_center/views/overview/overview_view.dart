@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:youthx/core/theme/app_theme.dart';
+import '../../utils/task_priority_style.dart';
 import '../../widgets/overview_calendar_card.dart';
 import '../../widgets/overview_nav_arrow.dart';
 import '../../widgets/overview_today_section.dart';
@@ -48,6 +50,9 @@ class _OverviewViewState extends State<OverviewView> {
     'November',
     'December',
   ];
+  static final DateFormat _longDay = DateFormat('EEEE, d MMMM');
+  static final DateFormat _dayStripLabel = DateFormat('EEE, d MMM');
+
   static const _timelineHours = [
     6,
     7,
@@ -145,6 +150,76 @@ class _OverviewViewState extends State<OverviewView> {
     }).toList();
   }
 
+  /// To-dos due on the selected day that have no time attached.
+  ///
+  /// The backend stores a to-do as a bare `dueDate` (a LocalDate) and never
+  /// sends a time, so `TaskModel.scheduledHour` is null for every real task.
+  /// Those tasks can therefore never match the hourly timeline, which used to
+  /// make a day that clearly had a due to-do look empty.
+  List<TaskModel> get _untimedTasksOnSelectedDay =>
+      _tasksDueOnSelectedDay.where((t) => t.scheduledHour == null).toList();
+
+  /// To-dos due on the selected day that do carry a time, if any ever do.
+  List<TaskModel> get _timedTasksOnSelectedDay =>
+      _tasksDueOnSelectedDay.where((t) => t.scheduledHour != null).toList();
+
+  /// Goals whose target date lands on the selected day.
+  List<GoalModel> get _goalsDueOnSelectedDay => widget.goals.where((g) {
+    try {
+      return _isSameDay(DateTime.parse(g.targetDate), _selectedDay);
+    } catch (_) {
+      return false;
+    }
+  }).toList();
+
+  /// True when at least one item can be placed in the hourly grid.
+  ///
+  /// Deliberately checks the data rather than the rendered widgets so the
+  /// "nothing on this day" decision never depends on building a list of
+  /// widgets to find out it is empty.
+  bool get _hasTimelineEvents {
+    final habitHours = widget.habits.map((h) => h.scheduledHour);
+    if (habitHours.any(_timelineHours.contains)) return true;
+    return _timedTasksOnSelectedDay
+        .any((t) => _timelineHours.contains(t.scheduledHour));
+  }
+
+  /// True when the selected day has nothing at all to show.
+  bool get _selectedDayIsEmpty =>
+      _untimedTasksOnSelectedDay.isEmpty &&
+      _goalsDueOnSelectedDay.isEmpty &&
+      !_hasTimelineEvents;
+
+  /// Heading for the selected day.
+  ///
+  /// "TODAY" is only correct for the real current day; for any other selected
+  /// date it is a lie, so a real date is used instead.
+  String get _selectedDayLabel {
+    final now = DateTime.now();
+    if (_isSameDay(_selectedDay, now)) return 'TODAY';
+    if (_isSameDay(_selectedDay, now.add(const Duration(days: 1)))) {
+      return 'TOMORROW';
+    }
+    if (_isSameDay(_selectedDay, now.subtract(const Duration(days: 1)))) {
+      return 'YESTERDAY';
+    }
+    return _longDay.format(_selectedDay).toUpperCase();
+  }
+
+  /// Small uppercase heading, matching the existing "TODAY" style.
+  Widget _sectionLabel(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: context.textSecondaryColor,
+        letterSpacing: 1,
+      ),
+    ),
+  );
+
   double get _goalsProgress {
     if (widget.goals.isEmpty) return 0;
     final total = widget.goals.fold<double>(0, (sum, g) => sum + g.progress);
@@ -190,7 +265,10 @@ class _OverviewViewState extends State<OverviewView> {
               onNextMonth: _goToNextMonth,
             ),
             const SizedBox(height: 20),
-            OverviewTodaySection(tasksDueOnSelectedDay: _tasksDueOnSelectedDay),
+            OverviewTodaySection(
+              tasksDueOnSelectedDay: _tasksDueOnSelectedDay,
+              label: _selectedDayLabel,
+            ),
           ] else ...[
             _buildScheduleSection(), // NEW
           ],
@@ -210,8 +288,10 @@ class _OverviewViewState extends State<OverviewView> {
               icon: Icons.chevron_left,
               onTap: _goToPreviousWeek,
             ),
+            // Date-aware: the selected day, not just the month, so switching
+            // between days of the same month is visible.
             Text(
-              '${_monthNames[_selectedDay.month - 1]} ${_selectedDay.year}',
+              _dayStripLabel.format(_selectedDay),
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
@@ -229,7 +309,80 @@ class _OverviewViewState extends State<OverviewView> {
           onDaySelected: (day) => setState(() => _selectedDay = day),
         ),
         const SizedBox(height: 20),
-        _buildTimeline(),
+        // An "all day" list plus goal deadlines come first, so a to-do that the
+        // backend stores without a time is never hidden behind an hourly grid.
+        ..._buildUntimedSections(),
+        if (_selectedDayIsEmpty)
+          _buildEmptyDayState()
+        else if (_hasTimelineEvents)
+          _buildTimeline(),
+      ],
+    );
+  }
+
+  /// Sections for everything on the selected day that has no place in the
+  /// hourly grid: to-dos without a time, and goal deadlines.
+  ///
+  /// Returns an empty list when there is nothing to add, so the schedule does
+  /// not render stray headings.
+  List<Widget> _buildUntimedSections() {
+    final untimed = _untimedTasksOnSelectedDay;
+    final goalDeadlines = _goalsDueOnSelectedDay;
+    if (untimed.isEmpty && goalDeadlines.isEmpty) return const [];
+
+    return [
+      if (untimed.isNotEmpty) ...[
+        _sectionLabel('ALL DAY · NO TIME SET'),
+        for (final task in untimed)
+          OverviewTimelineBlock(
+            emoji: '✅',
+            title: task.title,
+            status: task.isCompleted
+                ? '✓ Done · no time set'
+                : '${TaskPriorityStyle.labelOf(task.priority)} priority · no '
+                    'time set',
+            color: task.isCompleted ? Colors.green : Colors.blueGrey,
+          ),
+        const SizedBox(height: 20),
+      ],
+      if (goalDeadlines.isNotEmpty) ...[
+        _sectionLabel('GOAL DEADLINES'),
+        for (final goal in goalDeadlines)
+          OverviewTimelineBlock(
+            emoji: goal.emoji,
+            title: goal.title,
+            status: goal.isNumericTracked
+                ? 'Goal deadline · ${goal.amountLabel ?? 'no amount'}'
+                : 'Goal deadline',
+            color: const Color(0xFF6366F1),
+          ),
+        const SizedBox(height: 20),
+      ],
+    ];
+  }
+
+  /// Shown when the selected day genuinely has nothing on it, so the schedule
+  /// never falls back to an empty 16-row timeline.
+  Widget _buildEmptyDayState() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionLabel(_selectedDayLabel),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border:
+                context.isDark ? Border.all(color: context.borderColor) : null,
+          ),
+          child: Text(
+            'Nothing scheduled for this day 🎉\n'
+            'No to-dos, goal deadlines or timed habits on this date.',
+            style: TextStyle(color: context.textSecondaryColor),
+          ),
+        ),
       ],
     );
   }

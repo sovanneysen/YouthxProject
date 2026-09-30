@@ -77,7 +77,12 @@ class RestFinanceRepository implements FinanceRepository {
   Future<TransactionModel> createTransaction(TransactionModel t) async {
     final data = await _api.post('/expenses', _transactionBody(t));
     final parsed = _toTransaction(data as Map<String, dynamic>);
-    if (parsed.category.name.isEmpty && t.category.name.isNotEmpty) {
+    // `_toTransaction` substitutes 'Unknown' when the response carries no
+    // category details, so testing only for an empty name never fires and the
+    // category the user just chose would be dropped. Treat that placeholder as
+    // "category details absent" and keep the category we sent.
+    if ((parsed.category.name.isEmpty || parsed.category.name == 'Unknown') &&
+        t.category.name.isNotEmpty) {
       return TransactionModel(
         id: parsed.id,
         type: parsed.type,
@@ -94,7 +99,12 @@ class RestFinanceRepository implements FinanceRepository {
   Future<TransactionModel> updateTransaction(TransactionModel t) async {
     final data = await _api.put('/expenses/${t.id}', _transactionBody(t));
     final parsed = _toTransaction(data as Map<String, dynamic>);
-    if (parsed.category.name.isEmpty && t.category.name.isNotEmpty) {
+    // `_toTransaction` substitutes 'Unknown' when the response carries no
+    // category details, so testing only for an empty name never fires and the
+    // category the user just chose would be dropped. Treat that placeholder as
+    // "category details absent" and keep the category we sent.
+    if ((parsed.category.name.isEmpty || parsed.category.name == 'Unknown') &&
+        t.category.name.isNotEmpty) {
       return TransactionModel(
         id: parsed.id,
         type: parsed.type,

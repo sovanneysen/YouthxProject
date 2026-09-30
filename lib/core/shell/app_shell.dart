@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../auth/views/home_screen.dart';
 import '../../modules/community/binding/community_binding.dart';
@@ -6,7 +7,9 @@ import '../../modules/community/views/community_view.dart';
 import '../../modules/finance/bindings/finance_binding.dart';
 import '../../modules/finance/views/finance_home_page.dart';
 import '../../modules/growth_center/binding/growth_binding.dart';
+import '../../modules/growth_center/controllers/growth_controller.dart';
 import '../../modules/growth_center/views/growth_view.dart';
+import '../../modules/profile/binding/profile_data_binding.dart';
 import '../../modules/profile/views/profile_screen.dart';
 
 /// Persistent bottom-navigation shell.
@@ -21,7 +24,11 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _index = 0;
+  static const int _homeTab = 0;
+  static const int _communityTab = 1;
+  static const int _growthTab = 2;
+
+  int _index = _homeTab;
 
   @override
   void initState() {
@@ -34,6 +41,24 @@ class _AppShellState extends State<AppShell> {
     // FinanceHomePage is a GetView<FinanceController>; FinanceBinding is
     // idempotent (mock-safe guard), so it is safe to run here like the others.
     FinanceBinding().dependencies();
+    // ProfileScreen reads its header and stats from ProfileDataController.
+    // ProfileDataBinding is idempotent and local-only (no HTTP), so it is
+    // safe to run here as well.
+    ProfileDataBinding().dependencies();
+  }
+
+  /// Home's "View all habits" shortcut: switch the existing shell to Growth
+  /// with the Habits sub-tab selected instead of pushing a second Growth page.
+  void _openHabitsTab() {
+    if (!mounted) return;
+    Get.find<GrowthController>().activeTab.value = GrowthController.tabHabits;
+    setState(() => _index = _growthTab);
+  }
+
+  /// Home's "See All" shortcut: switch the existing shell to Community.
+  void _openCommunityTab() {
+    if (!mounted) return;
+    setState(() => _index = _communityTab);
   }
 
   @override
@@ -41,12 +66,15 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       body: IndexedStack(
         index: _index,
-        children: const [
-          HomeScreen(),
-          CommunityView(),
-          GrowthView(),
-          FinanceHomePage(),
-          ProfileScreen(),
+        children: [
+          HomeScreen(
+            onViewAllHabits: _openHabitsTab,
+            onSeeAllCommunity: _openCommunityTab,
+          ),
+          const CommunityView(),
+          const GrowthView(),
+          const FinanceHomePage(),
+          const ProfileScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

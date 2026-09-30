@@ -40,6 +40,17 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   int _page = 0;
 
+  void _openFullscreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _ImageViewerPage(
+          paths: widget.post.imagePaths,
+          initialIndex: _page,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
@@ -135,13 +146,19 @@ class _PostCardState extends State<PostCard> {
           ],
           if (post.imagePaths.isNotEmpty) ...[
             const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: AspectRatio(
-                aspectRatio: 16 / 11,
-                child: _PostImages(
-                  paths: post.imagePaths,
-                  onPageChanged: (p) => setState(() => _page = p),
+            // Tap opens the fullscreen viewer at the page already on screen.
+            // Only onTap is registered, so vertical feed scrolling and the
+            // horizontal PageView swipe keep working untouched.
+            GestureDetector(
+              onTap: () => _openFullscreen(),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: AspectRatio(
+                  aspectRatio: 16 / 11,
+                  child: _PostImages(
+                    paths: post.imagePaths,
+                    onPageChanged: (p) => setState(() => _page = p),
+                  ),
                 ),
               ),
             ),
@@ -227,14 +244,15 @@ class _PostImages extends StatelessWidget {
 
 class _PostImage extends StatelessWidget {
   final String path;
-  const _PostImage({required this.path});
+  final BoxFit fit;
+  const _PostImage({required this.path, this.fit = BoxFit.cover});
 
   @override
   Widget build(BuildContext context) {
     if (path.startsWith('http')) {
       return CachedNetworkImage(
         imageUrl: path,
-        fit: BoxFit.cover,
+        fit: fit,
         placeholder: (context, url) => Container(
           color: AppColors.surfaceAlt,
           child: const Icon(
@@ -255,11 +273,138 @@ class _PostImage extends StatelessWidget {
     }
     final file = File(path);
     if (file.existsSync()) {
-      return Image.file(file, fit: BoxFit.cover);
+      return Image.file(file, fit: fit);
     }
     return Container(
       color: AppColors.surfaceAlt,
       child: const Icon(Icons.image_outlined, color: AppColors.textMuted, size: 40),
+    );
+  }
+}
+
+/// Fullscreen, zoomable image viewer pushed from a post's image strip.
+///
+/// Uses a plain [MaterialPageRoute] so it sits above the shell without
+/// touching the feed's own navigation, and [InteractiveViewer] for the
+/// built-in pinch/pan behaviour.
+class _ImageViewerPage extends StatefulWidget {
+  final List<String> paths;
+  final int initialIndex;
+
+  const _ImageViewerPage({required this.paths, required this.initialIndex});
+
+  @override
+  State<_ImageViewerPage> createState() => _ImageViewerPageState();
+}
+
+class _ImageViewerPageState extends State<_ImageViewerPage> {
+  late final PageController _controller =
+      PageController(initialPage: widget.initialIndex);
+  late int _index = widget.initialIndex;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _controller,
+            itemCount: widget.paths.length,
+            onPageChanged: (i) => setState(() => _index = i),
+            itemBuilder: (context, index) => _ZoomableImage(
+              key: ValueKey(widget.paths[index]),
+              path: widget.paths[index],
+            ),
+          ),
+          // Tap anywhere on the chrome background to dismiss; the close button
+          // is the explicit affordance.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    tooltip: 'Close',
+                  ),
+                  const Spacer(),
+                  if (widget.paths.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: Center(
+                        child: Text(
+                          '${_index + 1} / ${widget.paths.length}',
+                          style: const TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One zoomable page of [_ImageViewerPage].
+///
+/// Panning is only enabled once the image is actually scaled, otherwise a
+/// horizontal drag would be fought over by the enclosing [PageView].
+class _ZoomableImage extends StatefulWidget {
+  final String path;
+
+  const _ZoomableImage({super.key, required this.path});
+
+  @override
+  State<_ZoomableImage> createState() => _ZoomableImageState();
+}
+
+class _ZoomableImageState extends State<_ZoomableImage> {
+  final TransformationController _transform = TransformationController();
+  bool _zoomed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _transform.addListener(_onTransformChanged);
+  }
+
+  @override
+  void dispose() {
+    _transform.removeListener(_onTransformChanged);
+    _transform.dispose();
+    super.dispose();
+  }
+
+  void _onTransformChanged() {
+    final zoomed = _transform.value.getMaxScaleOnAxis() > 1.01;
+    if (zoomed == _zoomed) return;
+    if (!mounted) return;
+    setState(() => _zoomed = zoomed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InteractiveViewer(
+      transformationController: _transform,
+      minScale: 1,
+      maxScale: 5,
+      panEnabled: _zoomed,
+      child: Center(
+        child: _PostImage(path: widget.path, fit: BoxFit.contain),
+      ),
     );
   }
 }

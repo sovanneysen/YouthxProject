@@ -6,7 +6,12 @@ import '../../../core/theme/app_theme.dart';
 import '../controllers/finance_controller.dart';
 
 class AddTransactionPage extends StatefulWidget {
-  const AddTransactionPage({super.key});
+  const AddTransactionPage({super.key, this.existing});
+
+  /// When set the page edits this transaction through `PUT /expenses/{id}`
+  /// instead of creating a new one with `POST /expenses`. Passing the existing
+  /// transaction is what lets the same form serve both flows.
+  final TransactionModel? existing;
 
   @override
   State<AddTransactionPage> createState() => _AddTransactionPageState();
@@ -16,13 +21,112 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   // Todo: STEP 1: Variables store"state" Can change Data
   final amountController = TextEditingController();
 
+  // * True while editing: seeded from the transaction being edited.
+  bool get isEditing => widget.existing != null;
+
   bool isExpense = true;
 
-  int selectedIndex = -1;
+  /// The chosen category. Held as the object rather than a list index so the
+  /// selection survives the category list loading asynchronously and stays
+  /// correct when the income/expense toggle swaps the visible list.
+  TransactionCategory? selectedCategory;
 
   DateTime selectedDate = DateTime.now();
 
   final noteController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.existing;
+    if (existing == null) return;
+
+    // Prefill every field from the transaction being edited. The backend
+    // stores a positive `amount` with the direction carried by `type`, so the
+    // absolute value is what belongs in the amount field.
+    isExpense = existing.type.toLowerCase() != 'income';
+    selectedCategory = existing.category;
+    selectedDate = existing.date;
+    amountController.text = existing.amount.abs().toStringAsFixed(2);
+    noteController.text = existing.note ?? '';
+  }
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    noteController.dispose();
+    super.dispose();
+  }
+
+  /// The category to send: prefer the copy from the loaded backend list so
+  /// `categoryId` always points at a real row, then fall back to name matching
+  /// and finally to whatever the transaction carried.
+  TransactionCategory _resolveCategory(List<TransactionCategory> list) {
+    final selected = selectedCategory;
+    if (selected == null) {
+      throw StateError('no category selected');
+    }
+    return list.firstWhereOrNull((c) => c.id != null && c.id == selected.id) ??
+        list.firstWhereOrNull((c) => c.name == selected.name) ??
+        selected;
+  }
+
+  void _toast(String message) {
+    // Guarded here rather than at each call site because the call sites sit
+    // after an `await`, and `context` is a State field.
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  /// Validates the form, then either creates (`POST /expenses`) or updates
+  /// (`PUT /expenses/{id}`) through the controller. Pops with `true` on
+  /// success so the caller can react.
+  Future<bool> _submit(FinanceController ctrl) async {
+    final amount = double.tryParse(amountController.text.trim());
+    if (amount == null || amount <= 0) {
+      _toast('Enter a valid amount');
+      return false;
+    }
+    if (selectedCategory == null) {
+      _toast('Select a category');
+      return false;
+    }
+
+    // Compute from the reactive backend list at save-time so the categoryId
+    // sent to the backend matches the DB FK.
+    final saveList =
+        isExpense ? ctrl.expenseCategories.toList() : ctrl.incomeCategories.toList();
+    final category = _resolveCategory(saveList);
+    final note = noteController.text.trim();
+
+    final existing = widget.existing;
+    final tx = TransactionModel(
+      // On edit the id must be preserved so the controller can replace the
+      // right list entry; on create the backend assigns the id.
+      id: existing?.id ?? '',
+      type: isExpense ? 'expense' : 'income',
+      category: category,
+      amount: amount,
+      note: note.isEmpty ? null : note,
+      date: selectedDate,
+    );
+
+    final success = isEditing
+        ? await ctrl.updateTransaction(tx)
+        : await ctrl.addTransaction(tx);
+    if (!success) {
+      // The controller writes the message into `error` on failure. Show our own
+      // toast and clear it so the Finance home is not left in its
+      // full-screen error state behind this sheet.
+      ctrl.clearError();
+      _toast(isEditing
+          ? 'Could not update the transaction'
+          : 'Could not save the transaction');
+    }
+    return success;
+  }
 
   // Todo: STEP 2: build() — build UI On screen
   @override
@@ -49,7 +153,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                       icon: Icon(Icons.close, color: context.textPrimaryColor),
                     ),
                     Text(
-                      'Add Transaction',
+                      isEditing ? 'Edit Transaction' : 'Add Transaction',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -57,44 +161,13 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {
-                        final amount = double.tryParse(amountController.text);
-                        if (amount == null || amount <= 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Enter a valid amount'),
-                            ),
-                          );
-                          return;
+                      onPressed: () async {
+                        final success = await _submit(ctrl);
+                        // `context` here is build()'s parameter, so the guard
+                        // belongs on the context, not on the State.
+                        if (success && context.mounted) {
+                          Navigator.pop(context, true);
                         }
-                        if (selectedIndex == -1) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Select a category')),
-                          );
-                          return;
-                        }
-
-                        // Compute from the reactive backend list at save-time
-                        // so the categoryId sent to POST matches the DB FK.
-                        final saveList = isExpense
-                            ? ctrl.expenseCategories.toList()
-                            : ctrl.incomeCategories.toList();
-                        final category = saveList[selectedIndex];
-                        final tx = TransactionModel(
-                          id: '', // backend assigns real id on create
-                          type: isExpense ? 'expense' : 'income',
-                          category: category,
-                          amount: amount,
-                          note: noteController.text.isEmpty
-                              ? null
-                              : noteController.text,
-                          date: selectedDate,
-                        );
-
-                        final controller = Get.find<FinanceController>();
-                        controller.addTransaction(tx).then((success) {
-                          if (success) Navigator.pop(context);
-                        });
                       },
 
                       child: const Text('Save'),
@@ -112,7 +185,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                         onTap: () {
                           setState(() {
                             isExpense = true;
-                            selectedIndex = -1;
+                            selectedCategory = null;
                           });
                         },
                         child: Container(
@@ -144,7 +217,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                         onTap: () {
                           setState(() {
                             isExpense = false;
-                            selectedIndex = -1;
+                            selectedCategory = null;
                           });
                         },
                         child: Container(
@@ -265,18 +338,24 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                     itemCount: categoryList.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                        ),
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
                     itemBuilder: (context, index) {
                       final category = categoryList[index];
-                      final isSelected = selectedIndex == index;
+                      // Match on the backend id; fall back to the name for a
+                      // category that has no id at all.
+                      final selected = selectedCategory;
+                      final isSelected = selected != null &&
+                          ((selected.id != null && category.id == selected.id) ||
+                              (selected.id == null &&
+                                  category.name == selected.name));
 
                       return GestureDetector(
                         onTap: () {
                           setState(() {
-                            selectedIndex = index;
+                            selectedCategory = category;
                           });
                         },
                         child: Container(

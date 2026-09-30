@@ -1,100 +1,72 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
 import '../../../auth/controllers/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../../data/models/post_model.dart';
 import '../../../routes/app_routes.dart';
+import '../../community/controllers/community_controller.dart';
+import '../../community/views/comments_view.dart';
+import '../../community/views/create_post_view.dart';
+import '../../community/views/widgets/post_card.dart';
+import '../controllers/profile_data_controller.dart';
 import '../profile_model.dart';
-import 'followers_screen.dart';
-import 'following_screen.dart';
 import 'edit_profile_screen.dart';
+import 'help_support_screen.dart';
 import 'notifications_screen.dart';
 import 'privacy_screen.dart';
 import 'settings_screen.dart';
-import 'help_support_screen.dart';
- 
+
+/// Profile tab.
+///
+/// The header identity, the statistics, and the "My posts" list are all read
+/// from [ProfileDataController], which in turn reads the existing auth,
+/// community, and growth controllers. Nothing on this screen is hardcoded, and
+/// no repository or API is called from a widget.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
- 
+
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
- 
+
 class _ProfileScreenState extends State<ProfileScreen> {
   static const Color primaryPurple = Color(0xFF5B5FEF);
   static const Color gradientBlue = Color(0xFF3B82F6);
   static const Color gradientPurple = Color(0xFF7C5CF0);
- 
+
   bool _menuOpen = false;
   PostTab _selectedTab = PostTab.myPosts;
 
-  final AuthController _auth = Get.find<AuthController>();
+  final ProfileDataController _profile = Get.find<ProfileDataController>();
   final ThemeController _theme = Get.find<ThemeController>();
 
-  String _initials(String? fullName) {
-    if (fullName == null || fullName.trim().isEmpty) return '…';
-    final parts = fullName.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty) return '…';
-    final first = parts.first.isNotEmpty ? parts.first[0] : '';
-    final last = parts.length > 1 && parts.last.isNotEmpty ? parts.last[0] : '';
-    return (first + last).toUpperCase();
-  }
- 
-  // TODO: replace with data fetched from your backend / database.
-  final List<Post> _myPosts = [
-    Post(
-      id: 'p1',
-      authorName: 'Alex Johnson',
-      authorInitials: 'AJ',
-      timeAgo: '2 days ago',
-      caption: 'Finally hit my savings goal for the semester 🎓',
-      likeCount: 24,
-    ),
-    Post(
-      id: 'p2',
-      authorName: 'Alex Johnson',
-      authorInitials: 'AJ',
-      timeAgo: '5 days ago',
-      caption: 'Study group at the library tonight, who\'s in?',
-      likeCount: 12,
-    ),
-  ];
- 
-  final List<Post> _sharedPosts = [
-    Post(
-      id: 's1',
-      authorName: 'Maria Chen',
-      authorInitials: 'MC',
-      timeAgo: '1 day ago',
-      caption: 'Great tips on budgeting for students 💰',
-      likeCount: 41,
-    ),
-  ];
- 
-  final List<Post> _savedPosts = [
-    Post(
-      id: 'sv1',
-      authorName: 'Sam Patel',
-      authorInitials: 'SP',
-      timeAgo: '3 days ago',
-      caption: 'My internship search checklist, saving this!',
-      likeCount: 88,
-      isSaved: true,
-    ),
-  ];
- 
-  List<Post> get _activePosts {
+  /// Only resolved when the Community tab has been built at least once.
+  CommunityController? get _community => Get.isRegistered<CommunityController>()
+      ? Get.find<CommunityController>()
+      : null;
+
+  /// Posts for the selected tab. My posts are the account's own; saved and
+  /// shared are the session-local in-memory state the community feed already
+  /// tracks, because the backend has no persistence for either.
+  List<PostModel> get _activePosts {
     switch (_selectedTab) {
       case PostTab.myPosts:
-        return _myPosts;
+        return _profile.myPosts;
       case PostTab.shared:
-        return _sharedPosts;
+        return _profile.sharedPosts;
       case PostTab.saved:
-        return _savedPosts;
+        return _profile.savedPosts;
     }
   }
- 
+
+  /// True only while the community feed has never completed a load, so an
+  /// empty list is not mistaken for "no posts".
+  bool get _isLoading =>
+      _activePosts.isEmpty && _profile.communityLoading;
+
   List<MenuItemData> get _menuItems => [
         MenuItemData(
           icon: Icons.edit,
@@ -141,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           isDanger: true,
         ),
       ];
- 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,31 +136,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               _buildAvatar(),
                               const SizedBox(height: 14),
-                              Obx(
-                                () => Text(
-                                  _auth.currentUser.value?.fullName ?? '…',
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: context.textPrimaryColor,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Obx(
-                                () => Text(
-                                  _auth.currentUser.value?.email ?? '',
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      color: context.textSecondaryColor),
-                                ),
-                              ),
+                              _buildIdentity(),
                               const SizedBox(height: 20),
                               _buildStatsCard(),
                               const SizedBox(height: 16),
                               _buildTabs(),
                               const SizedBox(height: 12),
-                              _buildPostsList(),
+                              // Wrapped in Obx so the list reacts to community
+                              // and growth updates, and so the loading spinner
+                              // is replaced once the feed resolves.
+                              Obx(() => _buildPostsList()),
                             ],
                           ),
                         ),
@@ -217,9 +174,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
- 
+
   // ---------------- HEADER ----------------
- 
+
   Widget _buildHeader() {
     return Container(
       height: 170,
@@ -256,7 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
- 
+
   Widget _blurCircle(double size) {
     return Container(
       width: size,
@@ -267,9 +224,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
- 
+
   // ---------------- ACCOUNT / SETTINGS DROPDOWN ----------------
- 
+
   Widget _buildMenuPanel() {
     return Material(
       color: Colors.transparent,
@@ -304,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
- 
+
   Widget _buildMenuRow(MenuItemData item) {
     return InkWell(
       onTap: () {
@@ -313,22 +270,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return;
         }
         setState(() => _menuOpen = false);
- 
+
         switch (item.title) {
           case 'Edit profile':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
             break;
           case 'Notifications':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
             break;
           case 'Privacy':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyScreen()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const PrivacyScreen()));
             break;
           case 'Settings':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
             break;
           case 'Help and support':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()));
             break;
           case 'Log out':
             _confirmLogOut();
@@ -374,7 +336,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
- 
+
   void _confirmLogOut() {
     showDialog(
       context: context,
@@ -398,9 +360,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
- 
+
   // ---------------- AVATAR ----------------
- 
+
   Widget _buildAvatar() {
     return Container(
       width: 96,
@@ -428,65 +390,173 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Center(
           child: Obx(
+            // Real initials from the session name, falling back to a neutral
+            // glyph when no name is available.
             () => Text(
-              _initials(_auth.currentUser.value?.fullName),
-              style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+              _profile.initials.isEmpty ? '?' : _profile.initials,
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
             ),
           ),
         ),
       ),
     );
   }
- 
+
+  // ---------------- IDENTITY ----------------
+
+  Widget _buildIdentity() {
+    return Obx(() {
+      final name = _profile.displayName;
+      final email = _profile.email;
+      final bio = _profile.bio;
+      final location = _profile.location;
+      final memberSince = _profile.memberSince;
+      final hasLocalName = _profile.hasLocalName;
+
+      return Column(
+        children: [
+          Text(
+            name.isEmpty ? 'YOUTHX member' : name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: context.textPrimaryColor,
+            ),
+          ),
+          if (email.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              email,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 14, color: context.textSecondaryColor),
+            ),
+          ],
+          if (location.isNotEmpty || memberSince != null) ...[
+            const SizedBox(height: 8),
+            _buildMetaRow(location: location, memberSince: memberSince),
+          ],
+          if (hasLocalName) ...[
+            const SizedBox(height: 8),
+            _buildLocalNameNote(),
+          ],
+          if (bio.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              bio,
+              textAlign: TextAlign.center,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
+            ),
+          ],
+        ],
+      );
+    });
+  }
+
+  /// Location and join date, each shown only when the session provides it.
+  Widget _buildMetaRow({
+    required String location,
+    required DateTime? memberSince,
+  }) {
+    final parts = <String>[];
+    if (location.isNotEmpty) parts.add(location);
+    if (memberSince != null) {
+      parts.add('Member since ${DateFormat.yMMM().format(memberSince)}');
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Text(
+        parts.join(' · '),
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: 12, color: context.textSecondaryColor),
+      ),
+    );
+  }
+
+  /// Marks a name that lives on this device only, so it is never mistaken for
+  /// the account name stored by the backend.
+  Widget _buildLocalNameNote() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: primaryPurple.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.smartphone, size: 12, color: primaryPurple),
+          const SizedBox(width: 5),
+          const Text(
+            'Display name saved on this device',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: primaryPurple,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ---------------- STATS ----------------
- 
+
+  /// Real counts derived from the community and growth controllers.
+  ///
+  /// A dash is shown while the underlying list is still loading, so a pending
+  /// request is never displayed as a real zero.
   Widget _buildStatsCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: _cardDecoration(),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _statItem('24', 'Posts'),
-          _statDivider(),
-          _statItem('128', 'Followers', onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const FollowersScreen()));
-          }),
-          _statDivider(),
-          _statItem('36', 'Following', onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const FollowingScreen()));
-          }),
-        ],
-      ),
+      child: Obx(() {
+        final growthLoading = _profile.growthLoading;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _statItem('${_profile.postCount}', 'Posts'),
+            _statDivider(),
+            _statItem(growthLoading ? '—' : '${_profile.goalCount}', 'Goals'),
+            _statDivider(),
+            _statItem(growthLoading ? '—' : '${_profile.streakDays}', 'Streak'),
+          ],
+        );
+      }),
     );
   }
- 
-Widget _statDivider() =>
+
+  Widget _statDivider() =>
       Container(width: 1, height: 36, color: context.borderColor);
 
-  Widget _statItem(String value, String label, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: context.textPrimaryColor)),
-          const SizedBox(height: 2),
-          Text(label,
-              style:
-                  TextStyle(fontSize: 13, color: context.textSecondaryColor)),
-        ],
-      ),
+  Widget _statItem(String value, String label) {
+    return Column(
+      children: [
+        Text(value,
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimaryColor)),
+        const SizedBox(height: 2),
+        Text(label,
+            style:
+                TextStyle(fontSize: 13, color: context.textSecondaryColor)),
+      ],
     );
   }
- 
+
   // ---------------- TABS ----------------
- 
+
   Widget _buildTabs() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -502,7 +572,7 @@ Widget _statDivider() =>
       ),
     );
   }
- 
+
   Widget _tabItem(String label, PostTab tab) {
     final bool selected = _selectedTab == tab;
     return Expanded(
@@ -531,125 +601,147 @@ Widget _statDivider() =>
       ),
     );
   }
- 
+
   // ---------------- POSTS ----------------
- 
+
   Widget _buildPostsList() {
-    if (_activePosts.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Text('No posts yet',
-            style: TextStyle(color: context.textSecondaryColor)),
+    // Always touch an observable so the enclosing Obx has a dependency even
+    // when neither the community nor the growth controller is registered.
+    _profile.loadingLocalProfile.value;
+
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
       );
     }
+
+    final posts = _activePosts;
+    if (posts.isEmpty) return _buildEmptyState();
+
     return Column(
-      children: _activePosts.map((post) => _buildPostCard(post)).toList(),
+      children: posts.map((post) => _buildPostCard(post)).toList(),
     );
   }
- 
-  Widget _buildPostCard(Post post) {
+
+  /// Explains why a tab is empty instead of inventing posts. Saved and shared
+  /// also state that they are not persisted on the server.
+  Widget _buildEmptyState() {
+    final (icon, title, message) = switch (_selectedTab) {
+      PostTab.myPosts => (
+          Icons.edit_note,
+          'No posts yet',
+          'Posts you publish in Community will show up here.',
+        ),
+      PostTab.shared => (
+          Icons.send,
+          'No shared posts',
+          'Posts you share in Community appear here for this session only.',
+        ),
+      PostTab.saved => (
+          Icons.bookmark_border,
+          'No saved posts',
+          'Posts you save in Community appear here for this session only.',
+        ),
+    };
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 36, 24, 40),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+        decoration: _cardDecoration(),
+        child: Column(
+          children: [
+            Icon(icon, size: 34, color: context.textSecondaryColor),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimaryColor,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: context.textSecondaryColor),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Renders a real post through the shared community card so Profile shows
+  /// the same content, media, and actions as the feed.
+  Widget _buildPostCard(PostModel post) {
+    final community = _community;
+    final isOwner = post.isOwner(_profile.userId);
+
     return Container(
       margin: const EdgeInsets.only(left: 24, right: 24, bottom: 14),
-      padding: const EdgeInsets.all(14),
       decoration: _cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: const Color(0xFFE6E9FE),
-                child: Text(
-                  post.authorInitials,
-                  style: const TextStyle(
-                      fontSize: 11, color: primaryPurple, fontWeight: FontWeight.w600),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(post.authorName,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                  Text(post.timeAgo,
-                      style: TextStyle(
-                          fontSize: 11, color: context.textSecondaryColor)),
-                ],
-              ),
-            ],
+      padding: const EdgeInsets.all(12),
+      child: PostCard(
+        post: post,
+        isOwner: isOwner,
+        onLike: community == null ? () {} : () => community.toggleLike(post),
+        onComment: community == null ? () {} : () => _openComments(post),
+        onSave: community == null ? () {} : () => community.toggleSave(post),
+        onShare: community == null ? () {} : () => community.toggleShare(post),
+        onEdit: () => Get.to(() => CreatePostView(editingPost: post)),
+        onDelete: () => _confirmDeletePost(post),
+        onAuthorTap: () {},
+      ),
+    );
+  }
+
+  void _openComments(PostModel post) {
+    Get.bottomSheet(
+      CommentsView(post: post),
+      isScrollControlled: true,
+      backgroundColor: context.cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+    );
+  }
+
+  void _confirmDeletePost(PostModel post) {
+    final community = _community;
+    if (community == null) return;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete post?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-          const SizedBox(height: 10),
-          Text(post.caption,
-              style: TextStyle(fontSize: 13, color: context.textPrimaryColor)),
-          const SizedBox(height: 10),
-          Container(
-            height: 110,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: context.bg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Divider(height: 1, color: context.borderColor),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _postAction(
-                icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
-                label: '${post.likeCount}',
-                color: post.isLiked ? Colors.redAccent : context.textSecondaryColor,
-                onTap: () => setState(() {
-                  post.isLiked = !post.isLiked;
-                  // TODO: persist like to database
-                }),
-              ),
-              const SizedBox(width: 18),
-              _postAction(
-                icon: Icons.share_outlined,
-                label: 'Share',
-                color: context.textSecondaryColor,
-                onTap: () {
-                  // TODO: open share sheet / write to post_shares table
-                },
-              ),
-              const Spacer(),
-              _postAction(
-                icon: post.isSaved ? Icons.bookmark : Icons.bookmark_border,
-                label: 'Save',
-                color: post.isSaved ? primaryPurple : context.textSecondaryColor,
-                onTap: () => setState(() {
-                  post.isSaved = !post.isSaved;
-                  // TODO: persist save to post_saves table
-                }),
-              ),
-            ],
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              community.deletePost(post);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
     );
   }
- 
-  Widget _postAction({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, size: 17, color: color),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 12, color: color)),
-        ],
-      ),
-    );
-  }
- 
-// ---------------- SHARED HELPERS ----------------
+
+  // ---------------- SHARED HELPERS ----------------
 
   BoxDecoration _cardDecoration() {
     return BoxDecoration(
@@ -665,4 +757,3 @@ Widget _statDivider() =>
     );
   }
 }
- 

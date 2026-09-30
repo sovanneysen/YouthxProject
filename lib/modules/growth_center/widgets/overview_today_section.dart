@@ -6,7 +6,18 @@ import '../utils/task_priority_style.dart';
 class OverviewTodaySection extends StatelessWidget {
   final List<TaskModel> tasksDueOnSelectedDay;
 
-  const OverviewTodaySection({super.key, required this.tasksDueOnSelectedDay});
+  /// Heading for the day these tasks belong to.
+  ///
+  /// Supplied by the caller because this section renders the *selected* day,
+  /// which is not always the current one — hardcoding "TODAY" here would
+  /// mislabel every other date the user can pick.
+  final String label;
+
+  const OverviewTodaySection({
+    super.key,
+    required this.tasksDueOnSelectedDay,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +25,7 @@ class OverviewTodaySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'TODAY',
+          label,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
