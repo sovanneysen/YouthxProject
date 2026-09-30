@@ -173,7 +173,7 @@ flutter analyze --no-pub
 
 The test suite uses `flutter_test` with fake repositories and mocked API providers, so it runs without a live backend. There are 22 test files covering auth, home, growth, finance, community, profile, and shell behaviour.
 
-**Current status (30 Sep 2026).** `flutter analyze --no-pub` reports **0 errors, 1 warning, 40 infos**. The suite has 5 pre-existing failures in `test/goal_progress_test.dart` (`pumpAndSettle timed out`), caused by uncommitted work-in-progress on `goal_detail_view.dart` that is not part of the committed history. With that work reverted, the suite passes 237/237.
+**Current status (30 Sep 2026).** `flutter test --concurrency=1` passes **237/237 tests**. `flutter analyze --no-pub` reports **0 errors, 5 warnings, and 46 infos**. The remaining analyzer findings are non-blocking warning/info-level diagnostics.
 
 **Windows note.** In this environment an external process occasionally deletes Flutter's temp directory mid-run, producing `Failed to load ... flutter_test_listener.` or a missing `output.dill`. It is intermittent and did not reproduce during the latest verification. If it occurs, re-run, or point the temp dir somewhere stable for that command:
 
@@ -229,7 +229,7 @@ Verified against the current source:
 - **Messenger is not backend-connected.** Chat uses an in-memory mock repository; messages are not persisted or synced across devices.
 - **Realtime is disabled by default.** `AppConfig.useMockBackend` is `true`, so the app uses an in-memory bus rather than the configured `SOCKET_URL`.
 - **Email verification is a placeholder.** `lib/auth/views/start.dart` routes to an unfinished verification screen.
-- **5 failing tests** in `test/goal_progress_test.dart` from uncommitted WIP (see Testing).
+
 
 ## Submission Checklist
 
