@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
+/// Help and Support sub-page opened from the Profile menu.
+///
+/// The answers describe what the app actually does. Where a capability is not
+/// built, the answer says so instead of walking people toward a flow that does
+/// not exist. "Contact support" and "Report a problem" are informational only:
+/// there is no support or reporting channel, so they carry no tap target and
+/// no chevron rather than implying somewhere to go.
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
 
@@ -19,9 +26,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   // TODO: replace with FAQ content fetched from your backend or a CMS.
   final List<_FaqItem> _faqs = [
     _FaqItem('How do I reset my password?',
-        'Go to Settings > Account security, then choose "Reset password" and follow the steps sent to your email.'),
+        'There is no self-service password reset yet. Nothing under Settings can change your password, and no reset link is sent to your email, so please keep the password you signed up with.'),
     _FaqItem('How do I make my account private?',
-        'Go to Privacy and turn on "Private account" so only approved followers can see your posts.'),
+        'Private accounts are not supported yet. The switch under Privacy is not saved, so it does not hide your posts from anyone, and there are no follower controls to limit who can see them.'),
     _FaqItem('How do I delete a post?',
         'Open the post from your "My posts" tab, tap the menu icon on the post, then choose Delete.'),
   ];
@@ -86,20 +93,18 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.chat_bubble_outline, color: AppColors.primaryPurple),
-                  title: Text('Contact support', style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
-                  trailing: Icon(Icons.chevron_right, color: context.textSecondaryColor),
-                  onTap: () {
-                    // TODO: open a support chat/email flow.
-                  },
+                  title: Text('Contact support',
+                      style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
+                  subtitle: Text('No support channel is set up yet.',
+                      style: TextStyle(fontSize: 11.5, color: context.textSecondaryColor)),
                 ),
                 Divider(height: 1, color: context.borderColor, indent: 14, endIndent: 14),
                 ListTile(
                   leading: const Icon(Icons.bug_report_outlined, color: AppColors.primaryPurple),
-                  title: Text('Report a problem', style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
-                  trailing: Icon(Icons.chevron_right, color: context.textSecondaryColor),
-                  onTap: () {
-                    // TODO: open a bug report form.
-                  },
+                  title: Text('Report a problem',
+                      style: TextStyle(fontSize: 13.5, color: context.textPrimaryColor)),
+                  subtitle: Text('There is nowhere to send a report yet.',
+                      style: TextStyle(fontSize: 11.5, color: context.textSecondaryColor)),
                 ),
               ],
             ),
